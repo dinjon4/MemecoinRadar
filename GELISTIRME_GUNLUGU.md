@@ -8,6 +8,17 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Sürümleme: v1.0.0
+
+- Kullanıcı isteği: commit kodu yerine v1.0.0 gibi sürüm; yükseltme kararı Claude'da.
+- Anlamsal sürümleme: düzeltme → son rakam, özellik → orta, kurulumu bozan → ilk. Kural `CLAUDE.md` ve `CHANGELOG.md` başında.
+- `VERSION = "1.0.0"` (Aşama 0–5 tamam, paylaşılan ilk sürüm). `CHANGELOG.md` (sade Türkçe sürüm notları) eklendi.
+- Güncelleme bölümü artık GitHub'daki sürüm numarasını (`radar/__init__.py`) ve kurulu sürümden yeni notları (`CHANGELOG.md`) gösterir; menüde "🔔 v1.1.0 çıktı". Not yoksa commit başlıkları gösterilir.
+- Git etiketi `v1.0.0` konup yüklendi.
+- Testler: 101.
+
+---
+
 ## 2026-10-08 — GitHub'a yüklendi
 
 - Kullanıcı onayıyla `gh` Homebrew ile kuruldu; kullanıcı `gh auth login` ile kendisi giriş yaptı (hesap: dinjon4).

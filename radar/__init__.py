@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-VERSION = "0.1"
+# Sürüm (anlamsal sürümleme): hata düzeltmesi → son rakam, yeni özellik → orta, büyük/kurulumu bozan → ilk.
+# Her yayında CHANGELOG.md'ye not eklenir ve git etiketi (vX.Y.Z) konur.
+VERSION = "1.0.0"
 USER_AGENT = f"MemecoinRadar/{VERSION}"
 
 # Hangi aşamadayız: panel sadece bu aşamaya kadar kullanılan ayarları gösterir.

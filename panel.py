@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking, updater
+from radar import CURRENT_STAGE, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking, updater
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -818,7 +818,7 @@ def update_section() -> None:
     with st.container(key="card-update"):
         st.markdown("#### Güncellemeler")
         status = update_status()
-        st.caption(f"Kurulu sürüm: {status.version or VERSION}")
+        st.caption(f"Kurulu sürüm: {status.version or updater.current_version()}")
         if not status.installed:
             st.info(status.message)
             return
@@ -831,9 +831,16 @@ def update_section() -> None:
             if not status.message:
                 st.success("En güncel sürümü kullanıyorsunuz.")
             return
-        st.markdown(f"**{status.behind} yeni değişiklik var:**")
-        for change in status.changes[:15]:
-            st.markdown(f"- {md(change)}")
+        if status.notes:
+            st.markdown(f"**Yeni sürüm: {status.latest}**")
+            for title, notes in status.notes[:5]:
+                st.markdown(f"**{md(title)}**")
+                for note in notes[:10]:
+                    st.markdown(f"- {md(note)}")
+        else:
+            st.markdown(f"**{status.behind} küçük değişiklik var:**")
+            for change in status.changes[:15]:
+                st.markdown(f"- {md(change)}")
         if status.local_changes:
             st.warning("Bu bilgisayarda program dosyaları elle değiştirilmiş; güncelleme bunları ezmemek için yapılamaz: "
                        + ", ".join(status.local_changes[:5]))
@@ -872,8 +879,10 @@ nav = st.navigation([
     st.Page(page_settings, title="Ayarlar", icon=":material/tune:", url_path="ayarlar"),
     st.Page(page_system, title="Sistem", icon=":material/monitor_heart:", url_path="sistem"),
 ])
-if update_status().behind:
-    st.sidebar.success("🔔 Yeni sürüm var → Sistem sayfasından güncelleyin")
-st.sidebar.caption(f"Sürüm {updater.current_version() or VERSION} · Aşama {CURRENT_STAGE}")
+_update = update_status()
+if _update.behind:
+    new = f"{_update.latest} çıktı" if _update.latest and _update.latest != _update.version else "Yeni sürüm var"
+    st.sidebar.success(f"🔔 {new} → Sistem sayfasından güncelleyin")
+st.sidebar.caption(f"Sürüm {updater.current_version()} · Aşama {CURRENT_STAGE}")
 st.sidebar.caption("Sadece izleme yapar. Yatırım tavsiyesi değildir.")
 nav.run()

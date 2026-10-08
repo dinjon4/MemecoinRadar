@@ -19,7 +19,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking, updater
+from radar import alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking, updater
 from radar.sources import helius
 
 log = logging.getLogger("radar")
@@ -170,7 +170,7 @@ def run_forever() -> None:
     cfg = None
     failures = 0
     restart = False
-    log.info("Memecoin Radar %s başladı. Durdurmak için Ctrl+C.", updater.current_version() or VERSION)
+    log.info("Memecoin Radar %s başladı. Durdurmak için Ctrl+C.", updater.current_version())
     try:
         while True:
             cfg = load_config(cfg)

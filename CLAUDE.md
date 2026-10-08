@@ -13,3 +13,12 @@ Kurallar (ayrıntısı planda):
 - Sadece izleme. Alım-satım yok, private key / seed phrase asla yok.
 - Gizli anahtarlar (bot token, chat ID, Helius) işletim sistemi kasasında (`radar/keys.py`); yedek olarak `.env`. Değerlerini asla ekrana basma, loglama veya dosyaya yazma.
 - Testler: `.venv/bin/python -m unittest`
+
+Sürüm ve yayın (kod gizli GitHub deposunda: dinjon4/MemecoinRadar; arkadaşlar panelden "Güncelle" ile alır):
+- Sürüm `radar/__init__.py` içindeki `VERSION` (anlamsal sürümleme). Yükseltme kararını Claude verir:
+  hata düzeltmesi/küçük iyileştirme → son rakam (1.0.1), yeni özellik/aşama → orta (1.1.0),
+  kurulumu bozan/veri sıfırlayan değişiklik → ilk (2.0.0).
+- Her yayında: `VERSION`'ı artır, `CHANGELOG.md`'nin en üstüne `## vX.Y.Z — YYYY-MM-DD` başlığıyla sade Türkçe notlar ekle,
+  testler geçsin, commit, `git tag vX.Y.Z`, `git push --follow-tags`. Sürüm artırmadan push etme
+  (sadece belge/yorum değişikliği bile olsa son rakamı artır).
+- Yayın kullanıcının açık onayıyla yapılır (GitHub'a gönderim dışa dönük bir işlemdir).

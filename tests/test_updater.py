@@ -89,6 +89,24 @@ class UpdaterTest(unittest.TestCase):
         updater.apply()
         self.assertEqual((self.friend / "config.yaml").read_text(), "whale_min_usd: 1500\n")
 
+    def test_version_and_release_notes(self):
+        (self.dev / "radar").mkdir()
+        (self.dev / "radar" / "__init__.py").write_text('VERSION = "1.1.0"\n')
+        self.publish("CHANGELOG.md", "# Sürüm notları\n\n## v1.1.0 — 2026-10-10\n- Haber katmanı eklendi.\n- Hata düzeltmesi.\n\n"
+                                     "## v1.0.0 — 2026-10-08\n- İlk sürüm.\n", "v1.1.0")
+        with mock.patch.object(updater, "VERSION", "1.0.0"):
+            s = updater.check()
+            self.assertEqual((s.version, s.latest), ("v1.0.0", "v1.1.0"))
+            self.assertEqual(s.notes, [("v1.1.0 — 2026-10-10", ["Haber katmanı eklendi.", "Hata düzeltmesi."])])
+            self.assertIn("v1.1.0 indirildi", updater.apply())
+
+    def test_parse_and_compare_versions(self):
+        self.assertEqual(updater.parse_version("v1.2.10"), (1, 2, 10))
+        self.assertGreater(updater.parse_version("v1.10.0"), updater.parse_version("v1.9.3"))
+        self.assertEqual(updater.parse_version("bozuk"), (0,))
+        notes = updater.release_notes("## v2.0.0 — x\n- a\n## v1.0.1 — y\n- b\n## v1.0.0 — z\n- c\n", "v1.0.0")
+        self.assertEqual([t for t, _ in notes], ["v2.0.0 — x", "v1.0.1 — y"])
+
     def test_not_a_clone(self):
         with mock.patch.object(updater, "BASE_DIR", Path(self.tmp.name)):
             s = updater.check()
