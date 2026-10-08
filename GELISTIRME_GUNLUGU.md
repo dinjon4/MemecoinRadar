@@ -8,6 +8,53 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Panel: token grafiği
+
+- Kullanıcı isteği: token seçilince DexScreener grafiği. Token detayına DexScreener'ın gömülebilir sayfası eklendi (`?embed=1&theme=dark`, yükseklik 650). Grafik tarayıcıda doğrudan DexScreener'dan yüklenir.
+- Denenen ek parametreler (`info=0`, `trades=0`, `chartLeftToolbar=0` vb.) ile grafik "Loading pair..." ekranında takıldı; sade parametrelere dönüldü.
+- Claude'un test tarayıcısında yükleme 30–40 sn sürdü, bazen hiç gelmedi; ilk açılışta "Info" sekmesi geliyor, "Chart" düğmesiyle grafiğe geçiliyor. Kullanıcının kendi tarayıcısında doğrulanması gerekiyor.
+- Yedek: DexScreener linki grafiğin altında. Gerekirse alternatif: GeckoTerminal'in gömülebilir grafiği.
+
+---
+
+## 2026-10-08 — Aşama 3: Risk kontrolleri
+
+**Durum:** Kod tamam, gerçek veriyle denendi. Kullanıcının panelde incelemesi bekleniyor.
+İlk git commit'i bu aşamadan önce yapıldı (Aşama 0–2).
+
+**Yapılanlar**
+- `radar/sources/rugcheck.py`: RugCheck raporu (ücretsiz, anahtarsız, dakikada 15 istek → istekler arası 4,5 sn).
+- `radar/risk.py`: 10 kontrol, her biri ok / info / warn / veto / unknown + Türkçe açıklama. Sonuçlar `risk_checks` tablosunda.
+  - RugCheck'ten: mint yetkisi, freeze yetkisi, Token-2022 (transfer ücreti, kalıcı yetkili), rugged işareti, ilk 10 cüzdan payı (havuz/kilit/yakım adresleri hariç), LP kilidi, bağlantılı cüzdan ağları.
+  - Kendi verimizden: aynı saniyede ≥3 cüzdanın aynı yönde büyük işlemi (toplu işlem), aynı isimde daha eski token (kopya).
+  - Helius'tan: dev satışı (`dev_state` tablosu, artımlı; dev'in elinde token kalmadıysa yeniden sorgulanmaz).
+- Sıra: tespit → risk (60 dk'da bir) → akış (15 dk'da bir). Veto alan tokenın akışı izlenmez (kredi tasarrufu).
+- Yeni ayar: `risk_interval_minutes` (60).
+- Panel: token listesinde Risk sütunu; token detayında kontrol listesi. Markdown'da `$` formül sanılıyordu, kaçırıldı.
+- Terminal: `python main.py --token ADRES` artık risk kontrollerini de gösterir.
+- Testler: 52 test, hepsi geçiyor (gerçek RugCheck raporu fixture'ı dahil).
+
+**Kararlar ve nedenleri**
+- "Aynı kaynaktan fonlanan cüzdanlar" için kendi analizimiz ve borsa cüzdan listesi yerine RugCheck'in bağlantılı ağ (insider network) analizi kullanıldı: ücretsiz, hazır ve borsa adreslerini ezberden uydurma riski yok. Helius Wallet API (fonlama kaynağı) cüzdan başına 100 kredi.
+- Dev satışı = dev'in o tokendan elinden çıkardığı / aldığı. Başka cüzdana aktarım da sayılır (çoğu zaman satışa hazırlık).
+- Kalıcı yetkili (permanent delegate) freeze ile aynı ayara bağlandı (veto): ikisi de tokenlarınızı elinizden alabilir.
+
+**Bulgular (ilk tur, 20 token)**
+- 9 token veto aldı; 8'inde sebep **dev satışı %93–100**. Pump.fun'da dev'in hepsini satması çok yaygın; %50 kuralı tokenların yarısını eliyordu.
+  → **Kullanıcı kararı: dev satışı sadece uyarı.** Yeni ayar `veto_if_dev_sold` (varsayılan kapalı); açılırsa `dev_sold_veto_pct` eşiği kullanılır. Aşama 5 verisiyle bu tokenların sonucu ölçülüp tekrar değerlendirilecek. Yeni kuralla: 20 tokendan 1'i veto (WLD, mint yetkisi).
+- USDC ile negatif test: mint ve freeze yetkisi doğru şekilde ⛔.
+- XRPN: dev 793M token almış (arzın ~%79'u), hepsini elden çıkarmış; ayrıca 6 cüzdanlık toplu satış yakalandı.
+- 5 tokenda bağlantılı ağlar arzın ≥%5'ini tutuyor; 4 tokenda LP kilidi düşük (Meteora/Raydium havuzları).
+- Maliyet: risk turu (20 token) ≈ 100–200 Helius kredisi; RugCheck turu ~90 sn.
+
+**Bilinen eksikler**
+- Toplu işlem tespiti sadece izlenen büyük işlemlere bakar; küçük işlemlerle yapılan bundle'lar görünmez.
+- Kopya tespiti sadece programın gördüğü tokenlar arasında.
+- RugCheck'e bağımlılık: RugCheck cevap vermezse çoğu kontrol "bilinmiyor" olur (program çökmez).
+- Çalışan tarama servisi ve panel eski kodla açık; yeniden başlatılmalı.
+
+---
+
 ## 2026-10-08 — Paket 0.1
 
 - `dist/MemecoinRadar-0.1-2026-10-08.zip` (75 KB): kod, ayarlar, belgeler, testler.

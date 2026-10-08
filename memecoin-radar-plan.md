@@ -67,7 +67,7 @@ Solana'da yeni çıkan memecoinleri izleyen, büyük cüzdanların para akışı
     - İleride daha fazla kapsama gerekirse: PumpPortal "migration" akışı (Pump.fun mezuniyetleri).
   - **Fiyat / MC / likidite / yaş:** DexScreener `/tokens/v1/solana/{adresler}` (istek başına 30 token). Token yaşı = en eski havuzunun açılışı. Takip edilen tüm genç tokenlar her taramada buradan güncellenir.
   - **DEX adları kaynağa göre değişir:** GeckoTerminal `pump-fun`/`meteora-dbc`, DexScreener `pumpfun`/`meteoradbc`/`bags`. Bonding curve listesi `radar/sources/__init__.py` içinde.
-  - **Risk kontrolleri:** RugCheck.xyz API (ücretsiz) + doğrudan RPC ile mint/freeze authority kontrolü.
+  - **Risk kontrolleri:** RugCheck.xyz `/v1/tokens/{mint}/report` (ücretsiz, anahtarsız, dakikada 15 istek). Tek istekte mint/freeze yetkisi, creator ve bakiyesi, top holder'lar (insider işaretli), LP kilidi, bağlantılı cüzdan ağları, Token-2022 özellikleri. Dev satışı Helius ile hesaplanır.
   - **Cüzdan ve işlem detayları:** Helius ücretsiz plan (ayda 1M kredi, 10 istek/sn). Aşama 2'de doğrulananlar (2026-10-08):
     - Enhanced Transactions API eskidi (bakım modunda, istek başına 100 kredi) — kullanılmıyor.
     - `getTransactionsForAddress` (full) ücretsiz planda açık: 100 işlem başına 10 kredi, çağrı başına en az 10. `maxSupportedTransactionVersion: 1` şart.
@@ -120,7 +120,8 @@ whale_min_usd: 1500          # büyük işlem eşiği
 
 # Risk
 top10_holder_warn_pct: 40    # ilk 10 cüzdan (havuz/burn hariç) arzın %'sinden fazlasını tutuyorsa uyar
-dev_sold_veto_pct: 50        # dev arzındaki payının bu %'sinden fazlasını sattıysa ele
+veto_if_dev_sold: false      # dev satışı varsayılan olarak sadece uyarı (Aşama 3 kullanıcı kararı)
+dev_sold_veto_pct: 50        # veto_if_dev_sold açıksa: dev elindekinin bu %'sinden fazlasını sattıysa ele
 veto_if_mint_authority: true # mint authority iptal edilmemişse ele
 veto_if_freeze_authority: true
 
@@ -175,11 +176,13 @@ Ucuz kontroller (Aşama 2'den önce çalışır):
 - **RugCheck sonucu:** Varsa risk özetini kaydet, kendi kontrollerimizle karşılaştır
 
 Pahalı kontroller (Aşama 2 verisiyle):
-- **Creator/dev satışı:** Tokenı oluşturan cüzdan sattı mı, ne kadarını. `dev_sold_veto_pct` üstü → Veto
+- **Creator/dev satışı:** Tokenı oluşturan cüzdan sattı mı, ne kadarını. Varsayılan: uyarı. `veto_if_dev_sold` açıksa `dev_sold_veto_pct` üstü → Veto
 - **Holder yoğunluğu:** İlk 10 cüzdanın arzdaki payı. Havuz/bonding curve hesabı, burn adresi ve bilinen kilit kontratları hesaba **katılmaz**.
 - **Bağlantılı cüzdanlar:** Aynı kaynaktan SOL almış cüzdanları grupla, tek kişi say.
-  - `data/cex_wallets.txt` içindeki borsa cüzdanlarından fonlananlar gruplanmaz (yoksa alakasız yüzlerce cüzdan "tek kişi" sayılır).
+  - Uygulanan (Aşama 3): RugCheck'in bağlantılı ağ analizi (transfer grafiği) + kendi verimizden "aynı saniyede ≥3 cüzdan aynı yönde" toplu işlem tespiti. Borsa cüzdan listesi (`cex_wallets.txt`) gerekmedi.
+  - Kendi fonlama analizimiz (Helius Wallet API, cüzdan başına 100 kredi) gerekirse sonra eklenir.
   - Bu bir tahmindir; mesajda "olası grup" diye yazılır.
+- **Ek kontroller (Aşama 3'te eklendi):** Token-2022 tehlikeli özellikleri (transfer ücreti, kalıcı yetkili), RugCheck "rugged" işareti, kopya token (aynı isimde daha eski token).
 
 - Panel: Token detayına risk kontrolleri (✅/⚠️/⛔ + açıklama); Tokenlar sayfasında elenenler ve eleme sebebi görülebilsin
 - Test: Bilinen birkaç token için (biri temiz, biri mint authority açık vb.) her kontrolün sonucu terminalde ve panelde görünmeli
@@ -252,3 +255,4 @@ Yatırım tavsiyesi değildir.
 - Pump.fun bonding curve aşamasındaki tokenlar dahil edilsin mi? (Varsayılan: hayır)
 - Hangi haber kaynakları takip edilsin?
 - Haftalık özet hangi gün/saatte gelsin?
+- Mobil erişim (şimdilik aşama yok, 2026-10-08 kararı): ileride istenirse program bilgisayarda/sunucuda kalır, telefon sadece paneli gösterir (Tailscale + ana ekran kısayolu veya WebView APK). Programı telefonda çalıştırmak önerilmedi (Android arka planı kesiyor, Streamlit çalışmıyor).

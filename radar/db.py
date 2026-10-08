@@ -63,6 +63,27 @@ CREATE TABLE IF NOT EXISTS wallet_balances (
     PRIMARY KEY (token, wallet)
 );
 
+-- Aşama 3: risk kontrollerinin son sonucu (token ve kontrol başına bir satır)
+CREATE TABLE IF NOT EXISTS risk_checks (
+    token       TEXT NOT NULL,
+    check_key   TEXT NOT NULL,
+    level       TEXT NOT NULL,        -- ok / info / warn / veto / unknown
+    title       TEXT NOT NULL,
+    detail      TEXT,
+    updated_at  TEXT NOT NULL,
+    PRIMARY KEY (token, check_key)
+);
+
+-- Tokenı oluşturan cüzdanın (dev) o tokendaki hareketleri
+CREATE TABLE IF NOT EXISTS dev_state (
+    token            TEXT PRIMARY KEY,
+    creator          TEXT,
+    received         REAL NOT NULL DEFAULT 0,   -- dev'e giren token
+    sent             REAL NOT NULL DEFAULT 0,   -- dev'den çıkan token (satış veya aktarım)
+    last_block_time  INTEGER,
+    updated_at       TEXT NOT NULL
+);
+
 -- Ücretli/limitli API'lerin tahmini kredi kullanımı (gün başına)
 CREATE TABLE IF NOT EXISTS api_usage (
     day      TEXT NOT NULL,           -- YYYY-MM-DD (UTC)

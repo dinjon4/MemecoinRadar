@@ -48,7 +48,7 @@ class Trade:
     block_time: datetime
 
 
-def _balance_deltas(meta: dict) -> dict[tuple[str, str], float]:
+def balance_deltas(meta: dict) -> dict[tuple[str, str], float]:
     """İşlemdeki (sahip, mint) başına token bakiyesi değişimi."""
     def amounts(balances):
         out = {}
@@ -74,7 +74,7 @@ def _signer(tx: dict) -> str:
 
 def parse_swap(tx: dict, pool: str, mint: str, quote_mint: str, quote_price_usd: float) -> Trade | None:
     """İşlem bu havuzda bir alım/satımsa Trade, değilse (likidite ekleme, boş işlem vb.) None döner."""
-    deltas = _balance_deltas(tx["meta"])
+    deltas = balance_deltas(tx["meta"])
     pool_quote = deltas.get((pool, quote_mint), 0.0)
     pool_token = deltas.get((pool, mint), 0.0)
     if pool_quote > 0 and pool_token < 0:
@@ -178,10 +178,13 @@ def update_token(conn: sqlite3.Connection, cfg: dict, token: sqlite3.Row) -> int
 
 
 def tokens_to_check(conn: sqlite3.Connection, cfg: dict) -> list[sqlite3.Row]:
-    """Filtreleri geçmiş, hâlâ yeni, akışı okunabilen tokenlar; hacmi yüksekten düşüğe, en fazla flow_max_tokens."""
+    """Filtreleri geçmiş, hâlâ yeni, akışı okunabilen ve risk kontrolünden veto almamış tokenlar;
+    hacmi yüksekten düşüğe, en fazla flow_max_tokens."""
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=cfg["token_max_age_hours"])).isoformat(timespec="seconds")
     rows = conn.execute(
-        "SELECT * FROM tokens WHERE passed = 1 AND created_at >= ? ORDER BY volume_h24_usd DESC", (cutoff,)
+        "SELECT * FROM tokens WHERE passed = 1 AND created_at >= ? "
+        "AND address NOT IN (SELECT token FROM risk_checks WHERE level = 'veto') "
+        "ORDER BY volume_h24_usd DESC", (cutoff,)
     ).fetchall()
     return [r for r in rows if unsupported_reason(r) is None][: cfg["flow_max_tokens"]]
 

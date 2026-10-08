@@ -3,17 +3,20 @@
 Çalıştırma:  streamlit run panel.py
 """
 
+import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 
-from radar import CURRENT_STAGE, VERSION, config, db, flows, logs, notify
+from radar import CURRENT_STAGE, VERSION, config, db, flows, logs, notify, risk
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
 # Tarama servisi bekleme sırasında 30 sn'de bir sinyal yazar; bundan uzun sessizlik = durmuş.
 ALIVE_SECONDS = 90
+# Ek parametreler (info=0, trades=0 vb.) denendi: grafik "Loading pair..." ekranında takılıyordu.
+DEXSCREENER_EMBED = "https://dexscreener.com/solana/{pair}?embed=1&theme=dark"
 
 logs.setup(to_file=False)
 st.set_page_config(page_title="Memecoin Radar", page_icon="📡", layout="wide")
@@ -123,6 +126,12 @@ def page_tokens() -> None:
             "FROM trades WHERE usd >= ? GROUP BY token", (whale_min,)
         )
     }
+    risk_summary = {
+        r["token"]: risk_badge(r["vetoes"], r["warns"])
+        for r in conn.execute(
+            "SELECT token, SUM(level = 'veto') AS vetoes, SUM(level = 'warn') AS warns FROM risk_checks GROUP BY token"
+        )
+    }
 
     passed_count = sum(r["passed"] for r in rows)
     st.caption(f"Son {max_age} saatte açılmış {len(rows)} token görüldü; {passed_count} tanesi filtreleri geçti.")
@@ -136,6 +145,7 @@ def page_tokens() -> None:
             continue
         table.append({
             "Durum": "✅" if r["passed"] else "⛔",
+            "Risk": risk_summary.get(r["address"], "—"),
             "Sembol": r["symbol"],
             "İsim": r["name"],
             "Yaş (saat)": round((now - datetime.fromisoformat(r["created_at"])).total_seconds() / 3600, 1),
@@ -180,6 +190,19 @@ def page_tokens() -> None:
     conn.close()
 
 
+def md(text: str) -> str:
+    """Markdown'a güvenli metin: '$' işaretleri formül sanılmasın, HTML etiketleri çalışmasın."""
+    return html.escape(text, quote=False).replace("$", "\\$")
+
+
+def risk_badge(vetoes: int, warns: int) -> str:
+    if vetoes:
+        return "⛔ elendi"
+    if warns:
+        return f"⚠️ {warns} uyarı"
+    return "✅ temiz"
+
+
 def short_wallet(address: str) -> str:
     return f"{address[:4]}…{address[-4:]}"
 
@@ -187,9 +210,28 @@ def short_wallet(address: str) -> str:
 def token_detail(conn, address: str, whale_min: int) -> None:
     token = conn.execute("SELECT * FROM tokens WHERE address = ?", (address,)).fetchone()
     st.divider()
-    st.subheader(f"{token['symbol']} — {token['name']}")
+    st.subheader(f"{md(token['symbol'])} — {md(token['name'])}")
     st.caption(f"Adres: `{address}`")
 
+    if token["pair_address"]:
+        # DexScreener'ın gömülebilir grafiği; tarayıcı doğrudan DexScreener'dan yükler.
+        st.iframe(DEXSCREENER_EMBED.format(pair=token["pair_address"]), height=650)
+        st.caption(f"Grafik: [DexScreener]({token['url']}) · en yüksek likiditeli havuz ({token['dex']})")
+
+    st.markdown("#### Risk kontrolleri")
+    checks = risk.checks_for(conn, address)
+    if not checks:
+        st.info("Henüz risk kontrolü yapılmadı. Tarama servisi bir sonraki risk turunda kontrol edecek "
+                "(sadece hacmi en yüksek tokenlar; Ayarlar → 'İzlenecek en fazla token').")
+    else:
+        if any(c["level"] == "veto" for c in checks):
+            st.error("Bu token ciddi risk taşıdığı için elendi: skor hesaplanmaz, cüzdan akışı izlenmez.")
+        for c in checks:
+            st.markdown(f"{risk.LEVEL_ICONS.get(c['level'], '?')} **{md(c['title'])}**"
+                        + (f"  \n<small>{md(c['detail'])}</small>" if c["detail"] else ""), unsafe_allow_html=True)
+        st.caption(f"Son kontrol: {local_time(checks[0]['updated_at'])} ({ago(checks[0]['updated_at'])})")
+
+    st.markdown("#### Cüzdan akışı")
     if reason := flows.unsupported_reason(token):
         st.info(f"Cüzdan akışı yok: {reason}.")
         return
@@ -209,7 +251,7 @@ def token_detail(conn, address: str, whale_min: int) -> None:
 
     wallets = flows.wallet_table(conn, address, whale_min)
     if not wallets:
-        st.info(f"Bu tokenda ${whale_min:,} ve üstü alım/satım bulunamadı. "
+        st.info(f"Bu tokenda \\${whale_min:,} ve üstü alım/satım bulunamadı. "
                 "Eşik Ayarlar → 'Whale eşiği' ile değiştirilebilir.")
         return
     money = st.column_config.NumberColumn(format="dollar")

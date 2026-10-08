@@ -18,6 +18,7 @@ RETRY_STATUSES = {429, 500, 502, 503, 504}
 MIN_INTERVAL_SECONDS = {
     "api.geckoterminal.com": 6.0,
     "api.dexscreener.com": 0.3,
+    "api.rugcheck.xyz": 4.5,  # dakikada 15 istek (x-rate-limit-limit başlığı)
 }
 
 _session = requests.Session()

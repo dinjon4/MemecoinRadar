@@ -15,7 +15,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-from radar import VERSION, config, db, discovery, flows, logs, notify
+from radar import VERSION, config, db, discovery, flows, logs, notify, risk
 from radar.sources import helius
 
 log = logging.getLogger("radar")
@@ -29,13 +29,19 @@ def run_scan(conn, cfg: dict, force_flow: bool = False) -> discovery.ScanResult:
     Sonraki aşamalarda risk ve skor adımları buraya eklenecek."""
     result = discovery.scan(conn, cfg)
 
-    last_flow = db.get_status(conn).get("last_flow_at")
-    due = not last_flow or datetime.now(timezone.utc) - datetime.fromisoformat(last_flow) >= timedelta(
-        minutes=cfg["flow_interval_minutes"])
-    if force_flow or due:
+    # Risk akıştan önce: veto alan tokenların akışı izlenmez (kredi tasarrufu).
+    if force_flow or is_due(conn, "last_risk_at", cfg["risk_interval_minutes"]):
+        risk.run(conn, cfg)
+        db.set_status(conn, "last_risk_at", db.utc_now())
+    if force_flow or is_due(conn, "last_flow_at", cfg["flow_interval_minutes"]):
         flows.run(conn, cfg)
         db.set_status(conn, "last_flow_at", db.utc_now())
     return result
+
+
+def is_due(conn, status_key: str, interval_minutes: int) -> bool:
+    last = db.get_status(conn).get(status_key)
+    return not last or datetime.now(timezone.utc) - datetime.fromisoformat(last) >= timedelta(minutes=interval_minutes)
 
 
 def show_token(conn, cfg: dict, address: str) -> None:
@@ -44,9 +50,13 @@ def show_token(conn, cfg: dict, address: str) -> None:
     if token is None:
         log.error("Bu token veritabanında yok. Önce tarama servisinin onu bulmuş olması gerekir.")
         sys.exit(1)
+    print(f"\n{token['symbol']} ({token['name']}) — risk kontrolleri")
+    risk.check_token(conn, cfg, token)
+    print(risk.format_checks(risk.checks_for(conn, address)))
+
     if reason := flows.unsupported_reason(token):
-        log.error("%s için akış okunamıyor: %s", token["symbol"], reason)
-        sys.exit(1)
+        print(f"\nCüzdan akışı yok: {reason}.")
+        return
     try:
         flows.update_token(conn, cfg, token)
     except helius.HeliusError as e:
