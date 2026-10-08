@@ -6,6 +6,13 @@
 
 cd "$(dirname "$0")" || exit 1
 
+# 7/24 servis kuruluysa (servis_kur.command) ikinci bir kopya açma; sadece paneli göster.
+if launchctl print "gui/$(id -u)/com.memecoinradar.panel" >/dev/null 2>&1; then
+    echo "Memecoin Radar zaten arka planda servis olarak çalışıyor. Panel açılıyor..."
+    open "http://127.0.0.1:8501"
+    exit 0
+fi
+
 if [ ! -x ".venv/bin/python" ]; then
     echo "Sanal ortam bulunamadı, kuruluyor (ilk seferde birkaç dakika sürebilir)..."
     python3 -m venv .venv || { echo "Python bulunamadı. python.org'dan Python kurun."; read -r; exit 1; }

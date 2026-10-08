@@ -62,6 +62,40 @@ program yeni sürümü indirir, gerekirse yeni paketleri kurar ve kendini yenide
 Ayarlarınız (`config.yaml`), anahtarlarınız ve verileriniz güncellemeden etkilenmez.
 Program dosyalarını elle değiştirmeyin; değiştirilmişse güncelleme onları ezmemek için durur.
 
+## 7/24 çalıştırma (evde sürekli açık duran bir Mac)
+Program tek bir Mac'te sürekli çalışır; herkes uyarıları ortak Telegram grubundan alır, paneli kendi cihazından açar.
+
+### 1. Mac'i hazırlama (bir kez)
+- **Sistem Ayarları → Kullanıcılar ve Gruplar → Otomatik giriş:** kendi kullanıcınızı seçin.
+  Elektrik kesilip Mac yeniden açıldığında oturum kendiliğinden açılır, program da başlar.
+  (FileVault açıksa otomatik giriş kullanılamaz; o durumda Mac yeniden başlarsa bir kez giriş yapmanız gerekir.)
+- **Sistem Ayarları → Enerji** (dizüstüyse **Pil → Seçenekler**): "Ekran kapalıyken otomatik uykuyu engelle" açık;
+  masaüstü Mac'te "Elektrik kesintisinden sonra otomatik başlat" açık. Dizüstüyse prizde ve kapağı açık dursun.
+- Programı bu Mac'e kurun (yukarıdaki "Arkadaşlar için kurulum" adımları 2–5) ve anahtarları panelden girin.
+
+### 2. Servisi kurma
+`servis_kur.command` dosyasına çift tıklayın. Program arka planda çalışmaya başlar; Terminal penceresini kapatabilirsiniz.
+- Mac açılıp oturum açılınca kendiliğinden başlar, çökerse kendini yeniden başlatır, Mac'i uyutmaz.
+- Panelden **Güncelle** de çalışır.
+- Kaldırmak için `servis_kaldir.command` (veriler, ayarlar ve anahtarlar silinmez).
+- Servis kuruluyken `start.command` ikinci bir kopya açmaz, sadece paneli gösterir.
+
+### 3. Uyarıları Telegram grubuna gönderme
+1. Telegram'da bir grup açın, arkadaşlarınızı ve programın Telegram bot'unu ekleyin.
+2. Grupta bir mesaj yazın.
+3. Panel → Ayarlar → Bağlantı anahtarları → **Chat ID'mi bilmiyorum** → *Bot'a yazanları bul* → grubun yanındaki *Bunu kullan*
+   (grup chat ID'leri `-` ile başlar).
+4. *Telegram testi → Test mesajı gönder* ile gruba "Merhaba" geldiğini kontrol edin.
+
+### 4. Paneli arkadaşlarla paylaşma (Tailscale)
+Panel internete açılmaz; Tailscale sadece davet ettiğiniz cihazları birbirine bağlayan ücretsiz özel bir ağdır.
+1. Servisin çalıştığı Mac'e [tailscale.com/download](https://tailscale.com/download)'dan Tailscale'i kurun ve giriş yapın.
+2. Terminal'de: `tailscale serve --bg 8501` — panel `https://<mac-adı>.<ağ-adı>.ts.net` adresinde, sadece sizin ağınızda açılır.
+3. Tailscale yönetim sayfasında (login.tailscale.com) bu Mac'i arkadaşlarınızla **paylaşın** (Share); onlar da kendi
+   cihazlarına Tailscale kurup daveti kabul eder ve aynı adresten paneli açar.
+
+Paneli açabilen herkes ayarları ve anahtarları değiştirebilir; sadece güvendiğiniz kişilerle paylaşın.
+
 ## Günlük kullanım
 - **Mac:** `start.command` dosyasına çift tıklayın. (İlk seferde Mac uyarı verirse: sağ tık → *Aç*.)
 - **Windows:** `start.bat` dosyasına çift tıklayın.

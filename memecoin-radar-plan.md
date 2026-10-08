@@ -228,6 +228,8 @@ Yatırım tavsiyesi değildir.
 - Uygulanan (Aşama 6, v1.1.0): kaynaklar Google Trends (ABD, ilgili haber başlıklarıyla), Google News, Reddit r/all (RSS; JSON API kayıt istiyor), CoinDesk, Cointelegraph, Decrypt, The Block. Eşleştirme: tam isim (2+ kelime, en az bir ayırt edici kelime içeriyorsa) + ayırt edici tek kelimeler (≥4 harf, İngilizcede yaygın değil — `radar/data/common_words_en.txt`, kripto jargonu değil). Hikâye skoru etkilemez; etkisi Aşama 5 verisiyle değerlendirilecek.
 
 ### Aşama 7 — 7/24 çalıştırma (isteğe bağlı)
+- Karar (2026-10-08): şimdilik **evdeki başka bir Mac**, herkes **tek kurulum** (uyarılar Telegram grubuna, panel Tailscale ile). Ücretli sunucu (Hetzner ~$4,5/ay önerildi) sonra değerlendirilecek.
+- Uygulanan (v1.2.0): `servis_kur.command` / `servis_kaldir.command` — launchd LaunchAgent'ları (tarama, panel, caffeinate), KeepAlive ile otomatik yeniden başlatma.
 - Bu aşamaya kadar kendi bilgisayarında: bilgisayar uykuya geçince program durur. Mac'te `caffeinate`, Windows'ta güç ayarları ile uykuyu engellemeyi anlat.
 - Sunucuda panel internete açılmaz; sunucuya SSH tüneli ile bağlanıp yine `127.0.0.1` üzerinden açılır.
 - Ucuz bir bulut sunucuya taşıma adımları

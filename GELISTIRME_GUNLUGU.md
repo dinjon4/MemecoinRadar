@@ -8,6 +8,27 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Aşama 7: 7/24 çalıştırma, evdeki Mac (v1.2.0)
+
+**Durum:** Kurulum betikleri ve rehber hazır, yayınlandı. Gerçek kurulum diğer Mac'te yapılıp birlikte doğrulanacak.
+
+**Kararlar**
+- Seçenekler araştırıldı (2026-10-08): Hetzner CX23 ~$4,5/ay+KDV (önerilen, 2026'da zamlar var); Google e2-micro "ücretsiz" ama 1 GB bellek ve dış IP/veri ücreti çıkabilir; Oracle Always Free cömert ama boşta kapatma ve kapasite sorunu, 2026 kesintisi doğrulanmadı; evdeki bilgisayar.
+- Kullanıcı: şimdilik **evdeki başka bir Mac**; ücretli sunucu sonra. **Herkes tek kurulum**: uyarılar Telegram grubuna, panel Tailscale ile (internete açılmadan), tek Helius anahtarı.
+
+**Yapılanlar**
+- `servis_kur.command`: üç LaunchAgent (`com.memecoinradar.scanner`, `.panel`, `.awake` = `caffeinate -i -s`), RunAtLoad + KeepAlive + ThrottleInterval 15. Panel 75 koduyla kapanınca (güncelleme) launchd yeniden açar; tarama servisi kendini execv ile yeniler. stdout /dev/null (normal kayıtlar zaten `logs/radar.log`'da, boyutu sınırlı), stderr `logs/service-*.log`.
+- `servis_kaldir.command`: servisleri durdurup kaldırır (veri/ayar/anahtar silinmez).
+- `start.command`: servis kuruluysa ikinci kopya açmaz, paneli tarayıcıda açar.
+- README: Mac hazırlığı (otomatik giriş, enerji ayarları), servis kurulumu, Telegram grubu (chat ID bulucu grupları da buluyor, ID `-` ile başlar), Tailscale ile paylaşım (`tailscale serve --bg 8501`).
+
+**Doğrulanmayanlar (diğer Mac'te kontrol edilecek)**
+- launchd servislerinin gerçekten başlaması ve Anahtar Zinciri'ne erişebilmesi (betik bu Mac'te çalıştırılmadı: kullanıcının günlük Mac'ine kalıcı servis kurmamak için; sadece sözdizimi ve plist geçerliliği kontrol edildi).
+- Panelin Tailscale serve arkasında sorunsuz açılması (Streamlit websocket/origin kontrolü sorun çıkarırsa ayar gerekebilir).
+- Telegram grubunda bot'un gizlilik modu: chat ID bulucu bot gruba eklendiğinde gelen güncellemeyi kullanıyor.
+
+---
+
 ## 2026-10-08 — Aşama 6: Haber / hikâye katmanı (v1.1.0)
 
 **Durum:** Kod tamam, gerçek haberlerle denendi; v1.1.0 hazır. Yayın (push) kullanıcı onayı bekliyor.

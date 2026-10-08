@@ -8,6 +8,12 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v1.2.0 — 2026-10-08
+- Yeni: **7/24 çalıştırma** (Aşama 7, evdeki Mac). `servis_kur.command` programı arka plan servisi olarak kurar:
+  Mac açılınca kendiliğinden başlar, çökerse yeniden başlar, Mac'i uyutmaz. Kaldırmak için `servis_kaldir.command`.
+- Servis kuruluyken `start.command` ikinci kopya açmaz, sadece paneli gösterir.
+- README: evdeki Mac'i hazırlama, Telegram grubuna uyarı, paneli Tailscale ile arkadaşlarla paylaşma.
+
 ## v1.1.0 — 2026-10-08
 - Yeni: **Hikâye** (Aşama 6). Haber ve trend başlıkları token adlarıyla eşleştirilir: Google Trends, Google News, Reddit, CoinDesk, Cointelegraph, Decrypt, The Block.
 - Telegram uyarılarına "📰 Hikâye" satırı eklendi (haber linki, kaynağı, ne kadar önce).
