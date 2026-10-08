@@ -8,6 +8,8 @@ import html
 
 import streamlit as st
 
+from radar import fmt
+
 # Renkler (.streamlit/config.toml ile uyumlu)
 BG = "#0a110e"
 CARD = "#101b16"
@@ -110,20 +112,7 @@ def esc(text) -> str:
 
 # --- Biçimlendirme ---
 
-def usd(value: float | None, signed: bool = False) -> str:
-    if value is None:
-        return "—"
-    sign = ("+" if value > 0 else "-" if value < 0 else "") if signed else ("-" if value < 0 else "")
-    v = abs(value)
-    if v >= 1_000_000_000:
-        s = f"{v / 1_000_000_000:.2f}B"
-    elif v >= 1_000_000:
-        s = f"{v / 1_000_000:.2f}M"
-    elif v >= 1_000:
-        s = f"{v / 1_000:.1f}K"
-    else:
-        s = f"{v:,.0f}"
-    return f"{sign}${s}"
+usd = fmt.usd
 
 
 def tone(value: float | None) -> str:

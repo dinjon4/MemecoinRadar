@@ -5,7 +5,8 @@ Kullanım:
     python main.py --once           # tek tarama yapıp çıkar
     python main.py --test-telegram  # Telegram'a deneme mesajı gönderir
     python main.py --find-chat-id   # Telegram chat ID'nizi bulur
-    python main.py --token ADRES    # bir tokenın cüzdan akışı tablosu
+    python main.py --token ADRES    # bir tokenın risk, cüzdan akışı ve skoru
+    python main.py --token ADRES --send-alert  # o tokenın uyarı mesajını test olarak gönderir
 """
 
 import argparse
@@ -16,27 +17,35 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-from radar import VERSION, config, db, discovery, flows, logs, notify, risk
+from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring
 from radar.sources import helius
 
 log = logging.getLogger("radar")
 
 # Bekleme sırasında panelin "çalışıyor" görmesi için bu aralıkla durum güncellenir.
 HEARTBEAT_SECONDS = 30
+# Tarama art arda bu kadar kez hata verirse Telegram'a haber verilir.
+ERROR_ALERT_AFTER = 3
 
 
 def run_scan(conn, cfg: dict, force_flow: bool = False) -> discovery.ScanResult:
-    """Tek bir tarama turu: token tespiti, sırası geldiyse cüzdan akışı.
-    Sonraki aşamalarda risk ve skor adımları buraya eklenecek."""
+    """Tek bir tarama turu: token tespiti; sırası geldiyse risk, cüzdan akışı, skor ve uyarılar."""
     result = discovery.scan(conn, cfg)
 
+    updated = False
     # Risk akıştan önce: veto alan tokenların akışı izlenmez (kredi tasarrufu).
     if force_flow or is_due(conn, "last_risk_at", cfg["risk_interval_minutes"]):
         risk.run(conn, cfg)
         db.set_status(conn, "last_risk_at", db.utc_now())
+        updated = True
     if force_flow or is_due(conn, "last_flow_at", cfg["flow_interval_minutes"]):
         flows.run(conn, cfg)
         db.set_status(conn, "last_flow_at", db.utc_now())
+        updated = True
+    # Skor sadece risk veya akış verisi yenilendiğinde değişir.
+    if updated:
+        alerts.run(conn, cfg)
+    alerts.maybe_heartbeat(conn, cfg)
     return result
 
 
@@ -73,6 +82,26 @@ def show_token(conn, cfg: dict, address: str) -> None:
     print(f"\nBugünkü Helius kullanımı: ~{db.usage_today(conn, helius.SERVICE)} kredi")
 
 
+def show_score(conn, cfg: dict, address: str, send: bool) -> None:
+    """Tokenın skoru ve Telegram mesajının önizlemesi; send=True ise mesajı test olarak gönderir."""
+    token = conn.execute("SELECT * FROM tokens WHERE address = ?", (address,)).fetchone()
+    s = scoring.compute(conn, cfg, token)
+    if s is None:
+        print("\nSkor yok: token risk kontrolünden veto aldı (elendi).")
+        return
+    scoring.save(conn, s)
+    conn.commit()
+    verdict = "uyarı gönderilecek seviyede" if s.score >= cfg["min_score_to_alert"] else \
+        f"uyarı eşiğinin ({cfg['min_score_to_alert']}) altında"
+    print(f"\nSkor: {s.score}/100 — {verdict}\n{scoring.breakdown(s, cfg)}")
+    message = alerts.format_message(conn, cfg, token, s)
+    print("\n--- Telegram mesajı önizlemesi ---\n" + message)
+    if send:
+        ok = notify.send("🧪 <i>Test uyarısı (skor eşiğinden bağımsız)</i>\n\n" + message, cfg)
+        print("\nTelegram'a gönderildi." if ok and not cfg["dry_run"] else
+              "\nDeneme modu açık: gönderilmedi." if ok else "\nGönderilemedi, loga bakın.")
+
+
 def load_config(last_good: dict | None) -> dict:
     """Ayarları okur. Dosya hatalıysa son geçerli ayarlarla devam eder; ilk açılışta hatalıysa çıkar."""
     try:
@@ -92,6 +121,16 @@ def wait(conn, minutes: int) -> None:
         db.set_status(conn, "heartbeat_at", db.utc_now())
 
 
+def notify_failure(cfg: dict, error: Exception) -> None:
+    """Art arda hatalarda Telegram'a bir kez haber ver (sorun sürse de tekrar atmaz)."""
+    try:
+        notify.send(f"⚠️ <b>Memecoin Radar</b>: tarama art arda {ERROR_ALERT_AFTER} kez hata verdi.\n"
+                    f"Son hata: <code>{notify.escape(type(error).__name__)}: {notify.escape(str(error)[:300])}</code>\n"
+                    "Ayrıntı için panelde Sistem sayfasına bakın.", cfg)
+    except Exception:
+        log.exception("Hata bildirimi gönderilemedi")
+
+
 def _stop_on_signal(signum, frame):
     raise KeyboardInterrupt
 
@@ -106,6 +145,7 @@ def run_forever() -> None:
     db.set_status(conn, "pid", os.getpid())
     db.set_status(conn, "stopped_at", None)
     cfg = None
+    failures = 0
     log.info("Memecoin Radar %s başladı. Durdurmak için Ctrl+C.", VERSION)
     try:
         while True:
@@ -116,10 +156,14 @@ def run_forever() -> None:
                 run_scan(conn, cfg)
                 db.set_status(conn, "last_scan_at", db.utc_now())
                 db.set_status(conn, "last_error", None)
+                failures = 0
             except Exception as e:
                 # Bir turdaki hata servisi durdurmasın; bir sonraki turda tekrar denenir.
                 log.exception("Tarama sırasında hata")
                 db.set_status(conn, "last_error", f"{db.utc_now()} {type(e).__name__}: {e}")
+                failures += 1
+                if failures == ERROR_ALERT_AFTER:
+                    notify_failure(cfg, e)
             db.set_status(conn, "heartbeat_at", db.utc_now())
             wait(conn, cfg["scan_interval_minutes"])
     except KeyboardInterrupt:
@@ -134,7 +178,9 @@ def main() -> None:
     parser.add_argument("--once", action="store_true", help="tek tarama yapıp çık")
     parser.add_argument("--test-telegram", action="store_true", help="Telegram'a deneme mesajı gönder")
     parser.add_argument("--find-chat-id", action="store_true", help="bot'a mesaj atan sohbetlerin chat ID'sini göster")
-    parser.add_argument("--token", metavar="ADRES", help="bir tokenın cüzdan akışını güncelle ve göster")
+    parser.add_argument("--token", metavar="ADRES", help="bir tokenın risk, cüzdan akışı ve skorunu göster")
+    parser.add_argument("--send-alert", action="store_true",
+                        help="--token ile: o tokenın uyarı mesajını test olarak Telegram'a gönder")
     args = parser.parse_args()
 
     logs.setup()
@@ -143,6 +189,7 @@ def main() -> None:
         cfg = load_config(None)
         conn = db.connect()
         show_token(conn, cfg, args.token.strip())
+        show_score(conn, cfg, args.token.strip(), args.send_alert)
         conn.close()
         return
 

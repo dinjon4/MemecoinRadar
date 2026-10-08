@@ -6,7 +6,7 @@ VERSION = "0.1"
 USER_AGENT = f"MemecoinRadar/{VERSION}"
 
 # Hangi aşamadayız: panel sadece bu aşamaya kadar kullanılan ayarları gösterir.
-CURRENT_STAGE = 3
+CURRENT_STAGE = 4
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG_PATH = BASE_DIR / "config.yaml"

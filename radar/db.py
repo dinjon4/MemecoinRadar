@@ -84,6 +84,25 @@ CREATE TABLE IF NOT EXISTS dev_state (
     updated_at       TEXT NOT NULL
 );
 
+-- Aşama 4: tokenın son skoru ve dökümü (details = JSON)
+CREATE TABLE IF NOT EXISTS scores (
+    token       TEXT PRIMARY KEY,
+    score       INTEGER NOT NULL,
+    details     TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+
+-- Gönderilen (veya deneme modunda gönderilmiş sayılan) uyarılar
+CREATE TABLE IF NOT EXISTS alerts (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    token     TEXT NOT NULL,
+    score     INTEGER NOT NULL,
+    sent_at   TEXT NOT NULL,
+    dry_run   INTEGER NOT NULL,      -- 1 = deneme modunda, Telegram'a gitmedi
+    message   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_alerts_token ON alerts(token, sent_at);
+
 -- Ücretli/limitli API'lerin tahmini kredi kullanımı (gün başına)
 CREATE TABLE IF NOT EXISTS api_usage (
     day      TEXT NOT NULL,           -- YYYY-MM-DD (UTC)

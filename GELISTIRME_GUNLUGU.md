@@ -8,6 +8,35 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Aşama 4: Skor ve Telegram uyarısı
+
+**Durum:** Kod tamam; gerçek bir token için test uyarısı Telegram'a gönderildi. Kullanıcının programı yeniden başlatıp ilk gerçek uyarıları görmesi bekleniyor.
+
+**Yapılanlar**
+- `radar/scoring.py`: 0–100 skor (whale akışı 50 + alıcı çeşitliliği 30 + likidite/MC 20 − risk cezası). Veto → skor yok. Sonuç ve döküm `scores` tablosunda (JSON).
+- `radar/alerts.py`: skor turu, uyarı kararı (eşik 60, 6 saat bekleme, skor +15 artarsa beklemeden), Telegram mesajı (HTML, token adları kaçırılıyor; DexScreener ve X linkleri), `alerts` tablosu. Deneme modunda gönderilmez ama kaydedilir. Gönderim başarısızsa bir sonraki turda tekrar denenir.
+- Günlük "çalışıyorum" özeti (`heartbeat_hours`, ilk açılışta hemen atmaz). Tarama art arda 3 kez hata verirse Telegram'a bir kez haber.
+- `radar/fmt.py`: ortak tutar/süre biçimi (panel ve mesaj aynı).
+- Yeni ayar: `risk_warn_penalty` (8). Aşama 4 ayarları panelde açıldı.
+- Akış: tespit → risk (60 dk) → akış (15 dk) → (risk veya akış yenilendiyse) skor + uyarı → heartbeat.
+- Terminal: `--token ADRES` artık skor ve mesaj önizlemesini de gösterir; `--send-alert` ile test uyarısı.
+- Panel: **Uyarılar** sayfası (geçmiş, mesaj önizlemesi), token listesinde Skor çubuğu, token detayında skor kartı (bileşen çubukları), Genel Bakış'ta "Uyarı (24 saat)".
+- Testler: 74.
+
+**Bulgular**
+- 19 tokenlık ilk dağılım: 4 token ≥60 (Mario64 84→92, Babem 81, OMARCHY 80, Gunner 64), net çıkış olanlar 0–12, veto almış olanlar skorsuz. Formül makul ayrıştırıyor.
+- "USDT" görünen token aslında "ՍЅᎠТ" (Ermeni/Kiril harfli taklit). Kopya kontrolü harf benzerliği hilelerini yakalamıyor.
+- Test uyarısı (Mario64, 92/100) Telegram'a gönderildi.
+
+**Bilinen eksikler**
+- Akışı okunamayan tokenlar (Meteora/Raydium, SOL dışı havuzlar) whale puanı alamadığı için pratikte uyarı alamaz (en fazla ~20 puan).
+- Harf hileli taklit tokenlar (ՍЅᎠТ gibi) için kontrol yok.
+- Skor sınırları tahmin; Aşama 5 verisiyle ayarlanmalı.
+- Telegram komutları (`/token` vb.) yok (planda "Ek (sonra)").
+- Yeniden başlatınca ilk turda eşiği geçen birkaç token için aynı anda uyarı gelebilir.
+
+---
+
 ## 2026-10-08 — Panel: yeni tasarım
 
 - Kullanıcı bir örnek tasarım gönderdi (koyu yeşil zemin, yuvarlak kartlar, limon yeşili vurgu, parlayan çizgi grafik, solda menü, üstte özet kartları). Streamlit'te kalınarak buna yaklaşıldı; birebir için paneli baştan yazmak gerekirdi (kullanıcıya söylendi).

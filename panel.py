@@ -4,6 +4,8 @@
 Görünüm (renkler, kartlar) panel_ui.py ve .streamlit/config.toml içinde.
 """
 
+import html
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
@@ -14,7 +16,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, VERSION, config, db, flows, logs, notify, risk, stats
+from radar import CURRENT_STAGE, VERSION, config, db, flows, logs, notify, risk, scoring, stats
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -140,6 +142,8 @@ def page_overview() -> None:
     trades = stats.recent_trades(conn, whale_min)
     risks = stats.recent_risks(conn, max_age)
     credits_today = db.usage_today(conn, helius.SERVICE)
+    day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(timespec="seconds")
+    alerts_24h = conn.execute("SELECT COUNT(*) FROM alerts WHERE sent_at >= ?", (day_ago,)).fetchone()[0]
     conn.close()
 
     ui.header("Genel Bakış", f"Son {max_age} saat · whale eşiği {ui.usd(whale_min)}", service_pill(status))
@@ -153,8 +157,9 @@ def page_overview() -> None:
          "chip": ui.chip("↑ giriş" if net > 0 else "↓ çıkış" if net < 0 else "—",
                          "up" if net > 0 else "down" if net < 0 else "muted-chip"),
          "sub": f"Alım {ui.usd(o['buy_usd'])} · Satım {ui.usd(o['sell_usd'])} · {o['trades']} işlem"},
-        {"label": "Riskten elenen", "value": f"{o['vetoed']}",
-         "chip": ui.chip("⛔ veto", "down") if o["vetoed"] else "", "sub": "Mint/freeze yetkisi, rug vb."},
+        {"label": "Uyarı (24 saat)", "value": f"{alerts_24h}",
+         "chip": ui.chip("🧪 deneme", "warn") if cfg["dry_run"] else "",
+         "sub": f"Skor {cfg['min_score_to_alert']}+ · {o['vetoed']} token riskten elendi"},
         {"label": "Helius kredisi (bugün)", "value": f"{credits_today:,}",
          "chip": ui.chip(f"%{100 * credits_today / budget:.0f}", "warn" if credits_today > 0.8 * budget else "up"),
          "sub": f"Günlük bütçe {budget:,}"},
@@ -217,6 +222,7 @@ def page_tokens() -> None:
             "SELECT token, SUM(level = 'veto') AS vetoes, SUM(level = 'warn') AS warns FROM risk_checks GROUP BY token"
         )
     }
+    scores = {r["token"]: r["score"] for r in conn.execute("SELECT token, score FROM scores")}
     passed_count = sum(r["passed"] for r in rows)
     ui.header("Tokenlar", f"Son {max_age} saatte {len(rows)} token görüldü · {passed_count} tanesi filtreleri geçti")
 
@@ -235,6 +241,7 @@ def page_tokens() -> None:
                 continue
             table.append({
                 "Durum": "✅" if r["passed"] else "⛔",
+                "Skor": scores.get(r["address"]),
                 "Risk": risk_summary.get(r["address"], "—"),
                 "Sembol": r["symbol"],
                 "İsim": r["name"],
@@ -262,9 +269,12 @@ def page_tokens() -> None:
         st.caption("Ayrıntı için bir satırın solundaki kutuyu seçin.")
         money = st.column_config.NumberColumn(format="compact")
         event = st.dataframe(
-            table, hide_index=True, width="stretch", height=420, on_select="rerun", selection_mode="single-row",
+            table, hide_index=True, width="stretch", height=min(420, 40 + 35 * len(table)),
+            on_select="rerun", selection_mode="single-row",
             column_order=[c for c in table[0] if show_filtered or c != "Eleme sebebi"],
             column_config={
+                "Skor": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%d",
+                                                         help="0–100. Uyarı eşiği Ayarlar'da."),
                 "MC ($)": money, "Likidite ($)": money, "Hacim 24s ($)": money, "Whale net ($)": money,
                 "Link": st.column_config.LinkColumn(display_text="DexScreener"),
                 "𝕏": st.column_config.LinkColumn(display_text="ara", help="Kontrat adresiyle X'te en yeni gönderiler"),
@@ -321,6 +331,7 @@ def token_detail(conn, address: str, whale_min: int) -> None:
 
     left, right = st.columns([1, 1.25], gap="medium")
     with left:
+        score_card(conn, address, bool(vetoes))
         if not checks:
             ui.list_card("Risk kontrolleri", [], "Henüz risk kontrolü yapılmadı. Bir sonraki risk turunda kontrol edilecek "
                                                   "(sadece hacmi en yüksek tokenlar).")
@@ -332,6 +343,38 @@ def token_detail(conn, address: str, whale_min: int) -> None:
     with right, st.container(key="card-wallets"):
         st.markdown("#### Cüzdan akışı")
         wallet_section(conn, token, whale_min)
+
+
+def score_card(conn, address: str, vetoed: bool) -> None:
+    cfg = load_config_or_none() or config.defaults()
+    s = scoring.load(conn, address)
+    if s is None:
+        text = "Elendiği için skor hesaplanmaz." if vetoed else "Skor bir sonraki risk/akış turunda hesaplanacak."
+        ui.list_card("Skor", [], text)
+        return
+    threshold = cfg["min_score_to_alert"]
+    kind = "up" if s.score >= threshold else "muted-chip"
+    bars = "".join(
+        f'<div style="margin-top:12px"><div class="mr-kpi-label"><span>{ui.esc(label)}</span>'
+        f'<span>{points:g} / {weight}</span></div>'
+        f'<div style="height:6px; background:{ui.BORDER}; border-radius:6px; margin-top:6px">'
+        f'<div style="height:6px; width:{100 * points / weight if weight else 0:.0f}%; background:{ui.LIME}; '
+        f'border-radius:6px; box-shadow: 0 0 8px {ui.LIME}"></div></div></div>'
+        for label, points, weight in [
+            ("Whale net akışı", s.flow_points, cfg["score_weights.whale_net_flow"]),
+            ("Alıcı çeşitliliği", s.buyers_points, cfg["score_weights.buyer_diversity"]),
+            ("Likidite / MC", s.liquidity_points, cfg["score_weights.liquidity_to_mc"]),
+        ]
+    )
+    penalty = (f'<div class="mr-kpi-sub" style="margin-top:12px">Risk cezası: '
+               f'<span class="mr-neg">−{s.penalty:g}</span> ({len(s.warn_titles)} uyarı)</div>') if s.penalty else ""
+    st.html(
+        f'<div class="mr-card"><div class="mr-kpi-label"><span>Skor</span>'
+        f'{ui.chip("uyarı eşiğinde" if s.score >= threshold else f"eşik {threshold}", kind)}</div>'
+        f'<div class="mr-kpi-value" style="font-size:2.4rem">{s.score}<span class="mr-dim" style="font-size:1rem"> / 100</span></div>'
+        f'{bars}{penalty}</div>'
+    )
+    st.write("")
 
 
 def wallet_section(conn, token, whale_min: int) -> None:
@@ -373,6 +416,67 @@ def wallet_section(conn, token, whale_min: int) -> None:
         },
     )
     st.caption("Kalan token, cüzdanın son işleminden sonra sorgulanır.")
+
+
+# --- Uyarılar ---
+
+def telegram_to_text(message: str) -> str:
+    """Telegram HTML mesajını düz metne çevirir (önizleme için)."""
+    return html.unescape(re.sub(r"<[^>]+>", "", message))
+
+
+def page_alerts() -> None:
+    cfg = load_config_or_none() or config.defaults()
+    conn = db.connect()
+    rows = conn.execute(
+        "SELECT a.*, t.symbol, t.name, t.url FROM alerts a LEFT JOIN tokens t ON t.address = a.token "
+        "ORDER BY a.sent_at DESC LIMIT 200"
+    ).fetchall()
+    conn.close()
+
+    ui.header("Uyarılar", f"Skor {cfg['min_score_to_alert']} ve üstü tokenlar Telegram'a gönderilir · "
+                          f"aynı token için {cfg['alert_cooldown_hours']} saat bekleme")
+    day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(timespec="seconds")
+    last24 = [r for r in rows if r["sent_at"] >= day_ago]
+    ui.kpi_grid([
+        {"label": "Uyarı (24 saat)", "value": str(len(last24)), "sub": f"Toplam {len(rows)} kayıt"},
+        {"label": "Ortalama skor (24 saat)",
+         "value": f"{sum(r['score'] for r in last24) / len(last24):.0f}" if last24 else "—"},
+        {"label": "Gönderim", "value": "Deneme modu" if cfg["dry_run"] else "Telegram",
+         "chip": ui.chip("🧪 gönderilmiyor", "warn") if cfg["dry_run"] else ui.chip("📨 açık", "up"),
+         "sub": "Ayarlar → Deneme modu"},
+    ])
+
+    if not rows:
+        ui.list_card("Uyarı geçmişi", [], "Henüz uyarı yok. Skoru eşiğin üstüne çıkan ilk token burada görünecek.")
+        return
+
+    with st.container(key="card-alerts"):
+        st.markdown("#### Uyarı geçmişi")
+        st.caption("Mesajın tamamını görmek için bir satır seçin.")
+        table = [
+            {
+                "Zaman": local_time(r["sent_at"], "%d.%m %H:%M"),
+                "Sembol": r["symbol"] or r["token"][:8],
+                "İsim": r["name"] or "",
+                "Skor": r["score"],
+                "Gönderim": "🧪 deneme" if r["dry_run"] else "📨 Telegram",
+                "Link": r["url"],
+                "𝕏": x_search_url(r["token"]),
+            }
+            for r in rows
+        ]
+        event = st.dataframe(
+            table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
+            column_config={
+                "Skor": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%d"),
+                "Link": st.column_config.LinkColumn(display_text="DexScreener"),
+                "𝕏": st.column_config.LinkColumn(display_text="ara"),
+            },
+        )
+        if event.selection.rows:
+            r = rows[event.selection.rows[0]]
+            st.code(telegram_to_text(r["message"]) + "\n\nYatırım tavsiyesi değildir.", language=None, wrap_lines=True)
 
 
 # --- Ayarlar ---
@@ -492,6 +596,7 @@ st.logo(str(LOGO), size="large")
 nav = st.navigation([
     st.Page(page_overview, title="Genel Bakış", icon=":material/space_dashboard:", default=True),
     st.Page(page_tokens, title="Tokenlar", icon=":material/toll:", url_path="tokenlar"),
+    st.Page(page_alerts, title="Uyarılar", icon=":material/notifications:", url_path="uyarilar"),
     st.Page(page_settings, title="Ayarlar", icon=":material/tune:", url_path="ayarlar"),
     st.Page(page_system, title="Sistem", icon=":material/monitor_heart:", url_path="sistem"),
 ])

@@ -190,6 +190,7 @@ Pahalı kontroller (Aşama 2 verisiyle):
 ### Aşama 4 — Skor ve Telegram uyarısı
 - Önce veto kontrolü: veto varsa skor hesaplanmaz, uyarı gitmez (log'a sebebiyle yazılır)
 - 0–100 basit skor, ağırlıklar `config.yaml`'dan: whale net akışı (+), alıcı çeşitliliği (+), likidite/MC oranı (+), uyarı seviyesindeki risk bulguları (−)
+  - Uygulanan formül (Aşama 4): akış = net whale girişi ÷ likidite (%50'de tam puan); çeşitlilik = net alım yapan whale grubu sayısı (aynı saniyede alanlar tek grup, 8'de tam puan); likidite/MC %3→0, %20→tam; her ⚠️ uyarı −`risk_warn_penalty` (8). Sınırlar `radar/scoring.py` başında; Aşama 5 verisiyle ayarlanacak.
 - "Holder artışı" ilk sürümde yok (zaman içinde holder sayısı tutmak pahalı); gerekirse Aşama 5 sonrası eklenir
 - Mesajda neden o skoru aldığı yazsın
 - Aynı token için tekrar tekrar uyarı atma (`alert_cooldown_hours`); skor `realert_score_jump` kadar artarsa tekrar uyar

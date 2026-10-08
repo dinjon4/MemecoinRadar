@@ -45,6 +45,8 @@ score_weights:
   buyer_diversity: 30
   # Ağırlık: likidite/MC oranı: Skor ağırlığı. Üç ağırlığın toplamı 100 olmalı.
   liquidity_to_mc: 20
+# Risk uyarısı başına ceza (puan): Her ⚠️ risk uyarısı skordan bu kadar puan düşürür.
+risk_warn_penalty: 8
 # Tekrar uyarı bekleme süresi (saat): Aynı token için bu süre dolmadan tekrar uyarı gönderilmez.
 alert_cooldown_hours: 6
 # Erken tekrar uyarı için skor artışı: Skor bu kadar artarsa bekleme süresi beklenmeden tekrar uyarılır.

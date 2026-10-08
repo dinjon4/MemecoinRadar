@@ -74,6 +74,8 @@ SETTINGS: list[Setting] = [
             "Skor ağırlığı. Üç ağırlığın toplamı 100 olmalı.", "Skor ve uyarı", 4, 0, 100),
     Setting("score_weights.liquidity_to_mc", int, 20, "Ağırlık: likidite/MC oranı",
             "Skor ağırlığı. Üç ağırlığın toplamı 100 olmalı.", "Skor ve uyarı", 4, 0, 100),
+    Setting("risk_warn_penalty", int, 8, "Risk uyarısı başına ceza (puan)",
+            "Her ⚠️ risk uyarısı skordan bu kadar puan düşürür.", "Skor ve uyarı", 4, 0, 50),
     Setting("alert_cooldown_hours", int, 6, "Tekrar uyarı bekleme süresi (saat)",
             "Aynı token için bu süre dolmadan tekrar uyarı gönderilmez.", "Skor ve uyarı", 4, 0, 168),
     Setting("realert_score_jump", int, 15, "Erken tekrar uyarı için skor artışı",
