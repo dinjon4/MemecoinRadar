@@ -8,6 +8,9 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v1.3.1 — 2026-10-08
+- Tek satır komutla kurulum: Mac'te Terminal'e, Windows'ta PowerShell'e yapıştırılacak komutlar README'de.
+
 ## v1.3.0 — 2026-10-08
 - Yeni: **tek adımda kurulum**. `kurulum/kurulum.command` (Mac) çift tıklanınca Python, git ve GitHub aracını
   gerekirse kurar, GitHub girişini ister, programı indirir, paketleri kurar, masaüstüne kısayol koyar ve açar.

@@ -40,6 +40,17 @@ Yeni bir bilgisayarda panelden bir kez daha girilir.
 ## Tek adımda kurulum (önerilen)
 Önce GitHub hesabınızla depo davetini kabul edin (depo sahibi davet eder, e-postanıza gelir). Sonra:
 
+**En kolayı — tek satır komut:**
+- **Mac:** Terminal'i açıp yapıştırın:
+  ```
+  curl -fsSL https://gist.githubusercontent.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc/raw/kurulum.command | bash
+  ```
+- **Windows:** PowerShell'i açıp yapıştırın *(henüz denenmedi)*:
+  ```
+  irm https://gist.githubusercontent.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc/raw/kurulum.ps1 | iex
+  ```
+
+**Ya da dosya ile:**
 - **Mac:** `kurulum/kurulum.command` dosyasını alın (depo sahibi gönderir) ve çift tıklayın.
   Mac "geliştirici doğrulanamadı" derse: dosyaya sağ tık → **Aç**.
 - **Windows:** `kurulum/kurulum.bat` ve `kurulum/kurulum.ps1` dosyalarını aynı klasöre koyup `kurulum.bat`'a çift tıklayın.

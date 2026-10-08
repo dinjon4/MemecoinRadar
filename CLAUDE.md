@@ -21,6 +21,9 @@ Sürüm ve yayın (kod gizli GitHub deposunda: dinjon4/MemecoinRadar; arkadaşla
 - Her yayında: `VERSION`'ı artır, `CHANGELOG.md`'nin en üstüne `## vX.Y.Z — YYYY-MM-DD` başlığıyla sade Türkçe notlar ekle,
   testler geçsin, commit, `git tag vX.Y.Z`, `git push --follow-tags`. Sürüm artırmadan push etme
   (sadece belge/yorum değişikliği bile olsa son rakamı artır).
+- `kurulum/` içindeki betikler değişirse herkese açık Gist'i de güncelle (tek satırlık kurulum komutu oradan çalışır):
+  `gh gist edit b48b601a6dd4fc5b3bb0a35b88cf3dfc -f kurulum.command kurulum/kurulum.command` (kurulum.ps1 için de aynısı).
+  Gist'e program kodu veya gizli bilgi konmaz.
 - Yayın izni (kullanıcı kararı, 2026-10-08): testler geçince sürüm yükseltilip **sormadan** gönderilir;
   gönderdikten sonra kullanıcıya hangi sürümün ne içerdiği kısaca bildirilir.
   Depo gizli kalır; depoyu herkese açmak veya başka yere göndermek için yine sorulur.

@@ -8,6 +8,15 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Tek satır komutla kurulum (v1.3.1)
+
+- Kullanıcı onayıyla herkese açık Gist: https://gist.github.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc (sadece `kurulum.command` ve `kurulum.ps1`; gizli bilgi ve program kodu yok, sadece depo adı görünür).
+- Mac: `curl -fsSL https://gist.githubusercontent.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc/raw/kurulum.command | bash` — Gist'ten gerçekten denendi (geçici klasör, genel git ayarı yalıtılmış): çalıştı.
+- Windows: `irm https://gist.githubusercontent.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc/raw/kurulum.ps1 | iex` — denenmedi.
+- `CLAUDE.md`: `kurulum/` değişirse Gist de güncellenir.
+
+---
+
 ## 2026-10-08 — Tek adımda kurulum (v1.3.0)
 
 - Kullanıcı isteği: GitHub'dan tek tıkla indirme ve kurulum, "veya bir terminal komutu ile".
