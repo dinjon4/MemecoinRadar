@@ -13,5 +13,13 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 start "Memecoin Radar - Tarama" ".venv\Scripts\python.exe" main.py
-".venv\Scripts\python.exe" -m streamlit run panel.py
+REM Panel guncelleme yaptiktan sonra 75 koduyla kapanir; o zaman yeniden acilir.
+set HEADLESS=false
+:panel
+".venv\Scripts\python.exe" -m streamlit run panel.py --server.headless %HEADLESS%
+if %ERRORLEVEL%==75 (
+    echo Guncelleme yapildi, panel yeniden baslatiliyor...
+    set HEADLESS=true
+    goto panel
+)
 pause

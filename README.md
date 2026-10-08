@@ -37,6 +37,31 @@ Yeni bir bilgisayarda panelden bir kez daha girilir.
 ### 5. Test mesajı
 **Ayarlar → Telegram testi → Test mesajı gönder.** Telegram'a "Merhaba!" mesajı gelmeli.
 
+## Arkadaşlar için kurulum (GitHub'dan)
+Program gizli bir GitHub deposunda durur. Bir kez kurulur; sonrası panelden **Güncelle** butonuyla.
+
+1. **GitHub hesabı:** Hesabınız yoksa [github.com](https://github.com)'dan ücretsiz açın. Depo sahibi sizi davet eder; e-postanızdaki daveti kabul edin.
+2. **Python:** Yukarıdaki "1. Python" adımı.
+3. **GitHub aracı (gh):** [cli.github.com](https://cli.github.com)'dan Mac için `.pkg`, Windows için `.msi` kurulum dosyasını indirip kurun.
+   **Windows'ta ayrıca** [git-scm.com](https://git-scm.com/download/win)'dan "Git for Windows"u kurun (Mac'te git zaten var).
+4. **GitHub'a giriş (bir kez):** Terminal (Windows: Komut İstemi) açıp yazın:
+   ```
+   gh auth login
+   ```
+   Sorulara: `GitHub.com` → `HTTPS` → "Authenticate Git with your GitHub credentials?" **Yes** → `Login with a web browser`. Tarayıcıda onaylayın.
+5. **Programı indirme:** Programın duracağı klasöre geçip (ör. `cd Desktop`) yazın:
+   ```
+   gh repo clone DEPO_SAHIBI/MemecoinRadar
+   ```
+6. **Başlatma:** `MemecoinRadar` klasöründeki `start.command` (Mac) veya `start.bat` (Windows) dosyasına çift tıklayın.
+7. **Kendi anahtarlarınız:** Panel → Ayarlar → Bağlantı anahtarları. Herkes **kendi** Telegram bot'unu ve **kendi** ücretsiz Helius anahtarını kullanmalı (aynı Helius anahtarı paylaşılırsa aylık kota birkaç kat hızlı biter).
+
+### Güncelleme
+Yeni sürüm çıkınca panelin sol menüsünde **🔔 Yeni sürüm var** yazar. **Sistem → Güncelle**'ye basın:
+program yeni sürümü indirir, gerekirse yeni paketleri kurar ve kendini yeniden başlatır.
+Ayarlarınız (`config.yaml`), anahtarlarınız ve verileriniz güncellemeden etkilenmez.
+Program dosyalarını elle değiştirmeyin; değiştirilmişse güncelleme onları ezmemek için durur.
+
 ## Günlük kullanım
 - **Mac:** `start.command` dosyasına çift tıklayın. (İlk seferde Mac uyarı verirse: sağ tık → *Aç*.)
 - **Windows:** `start.bat` dosyasına çift tıklayın.

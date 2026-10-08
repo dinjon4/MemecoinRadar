@@ -8,6 +8,32 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Arkadaşlarla paylaşım: GitHub + Güncelle butonu (hazırlık)
+
+**Durum:** Hazırlık tamam ve test edildi; GitHub'a yükleme kullanıcının son onayını bekliyor.
+**Kullanıcı kararları:** 2–3 arkadaş farklı yerlerde kullanacak; GitHub hesabı var; depo **gizli** olacak; önce hazırlık, yükleme ayrıca onaylanacak.
+
+**Yapılanlar**
+- `config.yaml` git takibinden çıkarıldı (`.gitignore`): her kurulumun kendi ayarı; güncellemeler ezmez. Dosya yoksa program varsayılanlarla oluşturur.
+- `radar/updater.py`: `check()` (git fetch, kaç yeni commit, başlıkları, elle değiştirilmiş dosyalar), `apply()` (`git pull --ff-only`; requirements.txt değiştiyse `pip install`). Elle değiştirilmiş kod dosyası varsa güncelleme yapılmaz.
+- Yeniden başlatma: panel `restart_requested_at` yazar ve 75 koduyla kapanır; `start.command`/`start.bat` döngüsü paneli yeni sekme açmadan yeniden açar. Tarama servisi isteği bir sonraki bekleme anında görür ve `os.execv` ile kendini yeni kodla açar (Mac'te süreç numarası aynı kalır; başlatıcının kapatma takibi bozulmaz). Yarım tarama kesilmez.
+- Panel: Sistem → **Güncellemeler** (kurulu sürüm, Denetle, yenilikler listesi, Güncelle); yeni sürüm varsa sol menüde "🔔 Yeni sürüm var" (10 dakikada bir denetim). Sürüm artık commit kodu + tarihi olarak gösteriliyor.
+- README: "Arkadaşlar için kurulum (GitHub'dan)" (gh kurulumu, `gh auth login`, `gh repo clone`, herkesin kendi anahtarları) ve "Güncelleme".
+- Testler: 99 (geçici bare repo + iki klon ile güncelleme akışı; internet yok). Test, porcelain çıktısında dosya adının ilk harfinin kesildiği bir hatayı yakaladı (düzeltildi).
+- Elle test: kopya klasörde tarama servisi yeniden başlatma isteğini tur bitince gördü ve kendini yeniden açtı.
+
+**Bulgular**
+- Bu oturumda GitHub MCP bağlantısı yok (kullanıcı bağlı olduğunu düşünüyordu). `gh` kurulu değil; Homebrew var.
+- Git geçmişinde anahtar/chat ID/bot adı yok; `.env` hiç commit edilmemiş. Commit yazar e-postası görünür (gizli depoda sadece davetliler görür).
+
+**Kalan adımlar (onaydan sonra)**
+- GitHub'da gizli depo oluşturma ve ilk yükleme (gh veya GitHub bağlantısı ile), `origin` + upstream ayarı.
+- Arkadaşları depoya davet etme (kullanıcı yapacak).
+- README'deki `DEPO_SAHIBI` yerine gerçek kullanıcı adı.
+- Windows başlatıcısındaki döngü Windows'ta denenmedi.
+
+---
+
 ## 2026-10-08 — Aşama 5: Takip ve haftalık özet
 
 **Durum:** Kod tamam, sahte veriyle panelde denendi. Gerçek sonuçlar için veri birikmesi gerekiyor (ilk 24 saatlik sonuçlar ilk uyarıdan 24 saat sonra). Kullanıcı Aşama 4 bildirimlerini doğruladı.

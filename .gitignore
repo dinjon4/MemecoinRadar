@@ -19,3 +19,7 @@ Thumbs.db
 
 # Paketler
 dist/
+
+# Kişisel ayarlar (her kurulumun kendi ayarı; güncellemeler ezmesin)
+config.yaml
+config.yaml.tmp

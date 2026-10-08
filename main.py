@@ -17,8 +17,9 @@ import signal
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
-from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking
+from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking, updater
 from radar.sources import helius
 
 log = logging.getLogger("radar")
@@ -117,11 +118,29 @@ def load_config(last_good: dict | None) -> dict:
         return last_good
 
 
-def wait(conn, minutes: int) -> None:
+def wait(conn, minutes: int, started_at: str) -> None:
     deadline = time.monotonic() + minutes * 60
     while (remaining := deadline - time.monotonic()) > 0:
         time.sleep(min(HEARTBEAT_SECONDS, remaining))
         db.set_status(conn, "heartbeat_at", db.utc_now())
+        if restart_requested(conn, started_at):
+            raise RestartRequested
+
+
+class RestartRequested(Exception):
+    """Panel güncelleme yaptı; tarama servisi yeni kodla yeniden başlamalı."""
+
+
+def restart_requested(conn, started_at: str) -> bool:
+    requested = db.get_status(conn).get("restart_requested_at")
+    return bool(requested) and requested > started_at
+
+
+def restart_self() -> None:
+    """Aynı süreci yeni kodla yeniden başlatır (Mac'te süreç numarası değişmez, başlatıcı takibi bozulmaz)."""
+    log.info("Güncelleme sonrası yeniden başlatılıyor...")
+    logging.shutdown()
+    os.execv(sys.executable, [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:]])
 
 
 def notify_failure(cfg: dict, error: Exception) -> None:
@@ -144,12 +163,14 @@ def run_forever() -> None:
     if hasattr(signal, "SIGHUP"):  # Windows'ta yok
         signal.signal(signal.SIGHUP, _stop_on_signal)
     conn = db.connect()
-    db.set_status(conn, "started_at", db.utc_now())
+    started_at = db.utc_now()
+    db.set_status(conn, "started_at", started_at)
     db.set_status(conn, "pid", os.getpid())
     db.set_status(conn, "stopped_at", None)
     cfg = None
     failures = 0
-    log.info("Memecoin Radar %s başladı. Durdurmak için Ctrl+C.", VERSION)
+    restart = False
+    log.info("Memecoin Radar %s başladı. Durdurmak için Ctrl+C.", updater.current_version() or VERSION)
     try:
         while True:
             cfg = load_config(cfg)
@@ -168,12 +189,17 @@ def run_forever() -> None:
                 if failures == ERROR_ALERT_AFTER:
                     notify_failure(cfg, e)
             db.set_status(conn, "heartbeat_at", db.utc_now())
-            wait(conn, cfg["scan_interval_minutes"])
+            wait(conn, cfg["scan_interval_minutes"], started_at)
     except KeyboardInterrupt:
         log.info("Durduruldu.")
+    except RestartRequested:
+        restart = True
     finally:
-        db.set_status(conn, "stopped_at", db.utc_now())
+        if not restart:
+            db.set_status(conn, "stopped_at", db.utc_now())
         conn.close()
+    if restart:
+        restart_self()
 
 
 def main() -> None:

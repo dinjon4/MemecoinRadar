@@ -5,8 +5,10 @@ Görünüm (renkler, kartlar) panel_ui.py ve .streamlit/config.toml içinde.
 """
 
 import html
+import os
 import re
 import sys
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
@@ -17,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking
+from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking, updater
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -791,12 +793,71 @@ def page_system() -> None:
         if status.get("last_error"):
             st.warning(f"Son hata: {status['last_error']}")
 
+    update_section()
+
     with st.container(key="card-logs"):
         st.markdown("#### Son kayıtlar")
         lines = logs.tail(100)
         st.code("\n".join(lines) if lines else "Henüz log yok.", language=None, height=380, wrap_lines=True)
         if st.button("🔄 Yenile"):
             st.rerun()
+
+
+# --- Güncelleme ---
+
+@st.cache_data(ttl=600, show_spinner=False)
+def update_status() -> updater.Status:
+    """GitHub'da yeni sürüm var mı (10 dakikada bir sorulur)."""
+    try:
+        return updater.check(fetch=True)
+    except updater.UpdateError as e:
+        return updater.Status(True, updater.current_version(), message=f"Denetlenemedi: {e}")
+
+
+def update_section() -> None:
+    with st.container(key="card-update"):
+        st.markdown("#### Güncellemeler")
+        status = update_status()
+        st.caption(f"Kurulu sürüm: {status.version or VERSION}")
+        if not status.installed:
+            st.info(status.message)
+            return
+        if status.message:
+            st.warning(status.message)
+        if st.button("🔄 Denetle"):
+            update_status.clear()
+            st.rerun()
+        if not status.behind:
+            if not status.message:
+                st.success("En güncel sürümü kullanıyorsunuz.")
+            return
+        st.markdown(f"**{status.behind} yeni değişiklik var:**")
+        for change in status.changes[:15]:
+            st.markdown(f"- {md(change)}")
+        if status.local_changes:
+            st.warning("Bu bilgisayarda program dosyaları elle değiştirilmiş; güncelleme bunları ezmemek için yapılamaz: "
+                       + ", ".join(status.local_changes[:5]))
+            return
+        st.caption("Ayarlarınız, anahtarlarınız ve verileriniz güncellemeden etkilenmez.")
+        if st.button("⬇️ Güncelle", type="primary"):
+            with st.spinner("İndiriliyor..."):
+                try:
+                    summary = updater.apply()
+                except updater.UpdateError as e:
+                    st.error(str(e))
+                    return
+            conn = db.connect()
+            db.set_status(conn, "restart_requested_at", db.utc_now())
+            conn.close()
+            update_status.clear()
+            st.success(f"{summary} Program yeniden başlatılıyor; sayfa birkaç saniye içinde kendini yeniler.")
+            # Tarama servisi isteği görüp kendini yeniden başlatır; panel 75 koduyla kapanır, başlatıcı yeniden açar.
+            threading.Timer(2.0, lambda: os._exit(updater.RESTART_EXIT_CODE)).start()
+
+
+def md(text: str) -> str:
+    """Markdown'a güvenli metin: '$' formül sanılmasın, HTML etiketleri çalışmasın."""
+    return html.escape(text, quote=False).replace("$", "\\$")
 
 
 # --- Uygulama ---
@@ -811,6 +872,8 @@ nav = st.navigation([
     st.Page(page_settings, title="Ayarlar", icon=":material/tune:", url_path="ayarlar"),
     st.Page(page_system, title="Sistem", icon=":material/monitor_heart:", url_path="sistem"),
 ])
-st.sidebar.caption(f"Sürüm {VERSION} · Aşama {CURRENT_STAGE}")
+if update_status().behind:
+    st.sidebar.success("🔔 Yeni sürüm var → Sistem sayfasından güncelleyin")
+st.sidebar.caption(f"Sürüm {updater.current_version() or VERSION} · Aşama {CURRENT_STAGE}")
 st.sidebar.caption("Sadece izleme yapar. Yatırım tavsiyesi değildir.")
 nav.run()
