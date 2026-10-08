@@ -8,6 +8,34 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Aşama 6: Haber / hikâye katmanı (v1.1.0)
+
+**Durum:** Kod tamam, gerçek haberlerle denendi; v1.1.0 hazır. Yayın (push) kullanıcı onayı bekliyor.
+
+**Yapılanlar**
+- `radar/news.py`: 7 ücretsiz kaynak (Google Trends ABD + ilgili haber başlıkları, Google News, Reddit r/all RSS, CoinDesk, Cointelegraph, Decrypt, The Block). Akışlar `defusedxml` ile okunur (kötü niyetli XML'e karşı). `news` tablosu, 96 saatten eskiler silinir. 30 dk'da bir okunur.
+- Eşleştirme: tam isim (2+ kelime; en az bir ayırt edici kelime varsa) ve ayırt edici tek kelimeler (≥4 harf, rakam değil, İngilizcede yaygın değil, kripto jargonu değil). Aksanlar sadeleştirilir. Tokenın çıkışından en fazla 48 saat önceki haberlere bakılır. Google Trends'te eşleşme ilgili bir haberdeyse o başlık + trend adı gösterilir.
+- `radar/data/common_words_en.txt`: wordfreq'ten (Zipf ≥ 4,3) çıkarılmış 4.263 yaygın İngilizce kelime (31 KB). wordfreq'in kendisi (58 MB) kurulmuyor.
+- Telegram mesajına "📰 Hikâye: <link> (kaynak, trend, ne kadar önce)". Panel: token detayında Hikâye kartı, listede Hikâye sütunu. Hikâye skoru etkilemez.
+- Ayarlar (Haber grubu): `news_enabled`, `news_interval_minutes` (30), `news_lookback_hours` (48).
+- Arama boş sonuç verince doğru mesaj.
+- Testler: 115 (gerçek Google Trends akışı fixture'ı; tehlikeli XML'in reddedildiği test dahil).
+
+**Kararlar ve nedenleri**
+- Reddit JSON API 403 (kayıt gerekli) → RSS. Reddit RSS limiti sıkı (art arda 429) → sadece r/all, istekler arası 10 sn.
+- İlk sürümde elle yazılmış kelime listesi çok gürültü verdi (427 tokendan 73 eşleşme, yarısı anlamsız: "have", "test", "help"...). Kelime sıklığı listesiyle 341 farklı tokendan 28 eşleşme, çoğu gerçek (Anthropic/Claude ↔ Anthropic haberi, Chonk ↔ Mistral "Le Chonk", Banana Wizard ↔ Nano Banana, GTA6 ↔ Google Trends "gta6", Meta ↔ Trump'ın Meta hissesi haberi).
+
+**Bulgular**
+- Kalan gürültü az: "deployed", "fade", "bullish" gibi orta sıklıktaki kelimeler. "Shark Tank" tokenı "shark" kelimesiyle de eşleşebilir.
+- Çalışan panel kod değişince eski modülleri hafızada tuttu (`KeyError: 'news_enabled'`); yeniden başlatma gerekiyor. Güncelle butonu bu yüzden zaten yeniden başlatıyor.
+
+**Bilinen eksikler**
+- X (Twitter) yok (ücretli).
+- Anlam benzerliğiyle eşleştirme (plandaki "gelişmiş yöntem") yok.
+- Haber kaynakları kodda sabit (`SOURCES`); panelden değiştirilemiyor.
+
+---
+
 ## 2026-10-08 — Sürümleme: v1.0.0
 
 - Kullanıcı isteği: commit kodu yerine v1.0.0 gibi sürüm; yükseltme kararı Claude'da.

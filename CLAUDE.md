@@ -21,4 +21,6 @@ Sürüm ve yayın (kod gizli GitHub deposunda: dinjon4/MemecoinRadar; arkadaşla
 - Her yayında: `VERSION`'ı artır, `CHANGELOG.md`'nin en üstüne `## vX.Y.Z — YYYY-MM-DD` başlığıyla sade Türkçe notlar ekle,
   testler geçsin, commit, `git tag vX.Y.Z`, `git push --follow-tags`. Sürüm artırmadan push etme
   (sadece belge/yorum değişikliği bile olsa son rakamı artır).
-- Yayın kullanıcının açık onayıyla yapılır (GitHub'a gönderim dışa dönük bir işlemdir).
+- Yayın izni (kullanıcı kararı, 2026-10-08): testler geçince sürüm yükseltilip **sormadan** gönderilir;
+  gönderdikten sonra kullanıcıya hangi sürümün ne içerdiği kısaca bildirilir.
+  Depo gizli kalır; depoyu herkese açmak veya başka yere göndermek için yine sorulur.

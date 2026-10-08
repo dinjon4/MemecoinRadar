@@ -4,11 +4,11 @@ from pathlib import Path
 
 # Sürüm (anlamsal sürümleme): hata düzeltmesi → son rakam, yeni özellik → orta, büyük/kurulumu bozan → ilk.
 # Her yayında CHANGELOG.md'ye not eklenir ve git etiketi (vX.Y.Z) konur.
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 USER_AGENT = f"MemecoinRadar/{VERSION}"
 
 # Hangi aşamadayız: panel sadece bu aşamaya kadar kullanılan ayarları gösterir.
-CURRENT_STAGE = 5
+CURRENT_STAGE = 6
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG_PATH = BASE_DIR / "config.yaml"

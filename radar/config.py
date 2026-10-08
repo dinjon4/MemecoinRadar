@@ -94,6 +94,13 @@ SETTINGS: list[Setting] = [
             "Özetin gönderileceği gün.", "Takip", 5, 1, 7),
     Setting("weekly_summary_hour", int, 10, "Haftalık özet saati",
             "Türkiye saatiyle. Bilgisayar o saatte kapalıysa açılınca gönderilir.", "Takip", 5, 0, 23),
+    # Haber
+    Setting("news_enabled", bool, True, "Haber/trend eşleştirme",
+            "Haber ve trend başlıkları token adlarıyla eşleştirilir; eşleşme 'Hikâye' olarak gösterilir.", "Haber", 6),
+    Setting("news_interval_minutes", int, 30, "Haber okuma sıklığı (dakika)",
+            "Haber kaynakları kaç dakikada bir okunur.", "Haber", 6, 10, 1440),
+    Setting("news_lookback_hours", int, 48, "Hikâye zaman aralığı (saat)",
+            "Tokenın çıkışından en fazla bu kadar önceki haberlere bakılır.", "Haber", 6, 1, 96),
     # Çalışma
     Setting("dry_run", bool, False, "Deneme modu (dry run)",
             "Açıksa Telegram'a mesaj gönderilmez, sadece terminale ve loga yazılır.", "Çalışma", 0),

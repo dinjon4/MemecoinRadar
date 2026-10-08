@@ -13,7 +13,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
-from radar import db, fmt, notify, risk, scoring, tracking
+from radar import db, fmt, news, notify, risk, scoring, tracking
 from radar.notify import escape as e
 from radar.sources import helius
 
@@ -72,6 +72,15 @@ def format_message(conn: sqlite3.Connection, cfg: dict, token: sqlite3.Row, s: s
         c = checks.get(key)
         if c is not None and c["level"] == "ok":
             lines.append(f"✅ {e(c['title'])}")
+
+    if cfg["news_enabled"]:
+        story = news.find(conn, token["symbol"] or "", token["name"] or "", token["created_at"],
+                          cfg["news_lookback_hours"], limit=1)
+        if story:
+            m = story[0]
+            trend = f", trend: {e(m.context)}" if m.context else ""
+            link = f'<a href="{html.escape(m.url, quote=True)}">{e(m.title)}</a>' if m.url else e(m.title)
+            lines.append(f"📰 Hikâye: {link} ({e(m.source)}{trend}, {news.age_text(m.published_at)})")
 
     lines.append(f"<code>{e(token['address'])}</code>")
     links = []

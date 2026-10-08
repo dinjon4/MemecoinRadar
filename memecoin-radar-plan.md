@@ -225,6 +225,7 @@ Yatırım tavsiyesi değildir.
   - Haber, tokenın çıkışından önceki birkaç saat içinde olmalı
 - Gelişmiş yöntem (sonra): anlam benzerliği ile eşleştirme
 - Eşleşme varsa Telegram mesajına "Hikâye: ..." satırı ekle (kaynak linkiyle)
+- Uygulanan (Aşama 6, v1.1.0): kaynaklar Google Trends (ABD, ilgili haber başlıklarıyla), Google News, Reddit r/all (RSS; JSON API kayıt istiyor), CoinDesk, Cointelegraph, Decrypt, The Block. Eşleştirme: tam isim (2+ kelime, en az bir ayırt edici kelime içeriyorsa) + ayırt edici tek kelimeler (≥4 harf, İngilizcede yaygın değil — `radar/data/common_words_en.txt`, kripto jargonu değil). Hikâye skoru etkilemez; etkisi Aşama 5 verisiyle değerlendirilecek.
 
 ### Aşama 7 — 7/24 çalıştırma (isteğe bağlı)
 - Bu aşamaya kadar kendi bilgisayarında: bilgisayar uykuya geçince program durur. Mac'te `caffeinate`, Windows'ta güç ayarları ile uykuyu engellemeyi anlat.

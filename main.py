@@ -19,7 +19,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from radar import alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking, updater
+from radar import alerts, config, db, discovery, flows, logs, news, notify, risk, scoring, tracking, updater
 from radar.sources import helius
 
 log = logging.getLogger("radar")
@@ -44,6 +44,9 @@ def run_scan(conn, cfg: dict, force_flow: bool = False) -> discovery.ScanResult:
         flows.run(conn, cfg)
         db.set_status(conn, "last_flow_at", db.utc_now())
         updated = True
+    if cfg["news_enabled"] and is_due(conn, "last_news_at", cfg["news_interval_minutes"]):
+        news.update(conn)
+        db.set_status(conn, "last_news_at", db.utc_now())
     # Skor sadece risk veya akış verisi yenilendiğinde değişir.
     if updated:
         alerts.run(conn, cfg)

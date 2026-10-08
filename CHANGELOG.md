@@ -8,6 +8,14 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v1.1.0 — 2026-10-08
+- Yeni: **Hikâye** (Aşama 6). Haber ve trend başlıkları token adlarıyla eşleştirilir: Google Trends, Google News, Reddit, CoinDesk, Cointelegraph, Decrypt, The Block.
+- Telegram uyarılarına "📰 Hikâye" satırı eklendi (haber linki, kaynağı, ne kadar önce).
+- Panel: token detayında Hikâye kartı, token listesinde Hikâye sütunu.
+- Yaygın kelimeler ("have", "test" gibi) tek başına eşleşme sayılmaz; yanlış eşleşmeler azaltıldı.
+- Ayarlar → Haber: açma/kapama, okuma sıklığı, zaman aralığı.
+- Arama sonucu boşsa artık doğru mesaj gösteriliyor.
+
 ## v1.0.0 — 2026-10-08
 - İlk paylaşılan sürüm (Aşama 0–5).
 - Yeni Solana tokenlarını bulur, likidite/yaş filtresi uygular.

@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking, updater
+from radar import CURRENT_STAGE, config, db, flows, keys, logs, news, notify, risk, scoring, stats, tracking, updater
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -242,11 +242,14 @@ def page_tokens() -> None:
                 continue
             if query and query not in f"{r['symbol']} {r['name']} {r['address']}".lower():
                 continue
+            story = news.find(conn, r["symbol"] or "", r["name"] or "", r["created_at"],
+                              cfg["news_lookback_hours"], limit=1) if cfg["news_enabled"] else []
             table.append({
                 "Durum": "✅" if r["passed"] else "⛔",
                 "Skor": scores.get(r["address"]),
                 "Risk": risk_summary.get(r["address"], "—"),
                 "Sembol": r["symbol"],
+                "Hikâye": f"📰 {story[0].keyword}" if story else "",
                 "İsim": r["name"],
                 "Yaş (saat)": round((now - datetime.fromisoformat(r["created_at"])).total_seconds() / 3600, 1),
                 "MC ($)": r["market_cap_usd"],
@@ -265,7 +268,11 @@ def page_tokens() -> None:
             })
 
         if not table:
-            st.info("Gösterilecek token yok. Tarama servisi çalışıyor mu? (Sistem sayfası)")
+            if query:
+                st.info("Aramayla eşleşen token yok." + ("" if show_filtered else " Elenenler arasında da aramak için "
+                                                                                  "'Elenenleri de göster'i açın."))
+            else:
+                st.info("Gösterilecek token yok. Tarama servisi çalışıyor mu? (Sistem sayfası)")
             conn.close()
             return
 
@@ -327,6 +334,8 @@ def token_detail(conn, address: str, whale_min: int) -> None:
     if token["url"]:
         c3.link_button("DexScreener'da aç ↗", token["url"], width="stretch")
 
+    story_card(conn, token)
+
     if token["pair_address"]:
         with st.container(key="card-chart"):
             # DexScreener'ın gömülebilir grafiği; tarayıcı doğrudan DexScreener'dan yükler.
@@ -346,6 +355,31 @@ def token_detail(conn, address: str, whale_min: int) -> None:
     with right, st.container(key="card-wallets"):
         st.markdown("#### Cüzdan akışı")
         wallet_section(conn, token, whale_min)
+
+
+def story_card(conn, token) -> None:
+    """Token adıyla eşleşen haber/trend başlıkları (Aşama 6)."""
+    cfg = load_config_or_none() or config.defaults()
+    if not cfg["news_enabled"]:
+        return
+    matches = news.find(conn, token["symbol"] or "", token["name"] or "", token["created_at"],
+                        cfg["news_lookback_hours"], limit=3)
+    if not matches:
+        return
+    rows = "".join(
+        f'<div class="mr-row"><div style="font-size:1.3rem">📰</div><div class="mr-main">'
+        f'<div class="mr-title" style="white-space:normal">'
+        + (f'<a href="{ui.esc(m.url)}" target="_blank" style="color:{ui.TEXT}; text-decoration:none">{ui.esc(m.title)}</a>'
+           if m.url else ui.esc(m.title))
+        + f'</div><div class="mr-sub">{ui.esc(m.source)}'
+        + (f" · trend: {ui.esc(m.context)}" if m.context else "")
+        + f' · {ui.esc(news.age_text(m.published_at))} · eşleşen: <b>{ui.esc(m.keyword)}</b></div></div></div>'
+        for m in matches
+    )
+    st.html(f'<div class="mr-card"><h4>Hikâye</h4>{rows}'
+            f'<div class="mr-kpi-sub" style="margin-top:8px">Token adıyla eşleşen haber ve trendler. '
+            f'Eşleşme her zaman gerçek bağlantı anlamına gelmez; skoru etkilemez.</div></div>')
+    st.write("")
 
 
 def score_card(conn, address: str, vetoed: bool) -> None:

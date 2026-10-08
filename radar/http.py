@@ -19,6 +19,7 @@ MIN_INTERVAL_SECONDS = {
     "api.geckoterminal.com": 6.0,
     "api.dexscreener.com": 0.3,
     "api.rugcheck.xyz": 4.5,  # dakikada 15 istek (x-rate-limit-limit başlığı)
+    "www.reddit.com": 10.0,   # RSS limiti sıkı (art arda isteklerde 429)
 }
 
 _session = requests.Session()

@@ -118,6 +118,18 @@ CREATE TABLE IF NOT EXISTS tracking (
     UNIQUE (token, cohort)
 );
 
+-- Aşama 6: haber/trend başlıkları (token adlarıyla eşleştirmek için)
+CREATE TABLE IF NOT EXISTS news (
+    id            TEXT PRIMARY KEY,   -- kaynak+başlık+adres özeti
+    source        TEXT NOT NULL,
+    title         TEXT NOT NULL,
+    url           TEXT,
+    published_at  TEXT NOT NULL,
+    fetched_at    TEXT NOT NULL,
+    text          TEXT NOT NULL       -- eşleştirmede kullanılan metin
+);
+CREATE INDEX IF NOT EXISTS idx_news_published ON news(published_at);
+
 -- Ücretli/limitli API'lerin tahmini kredi kullanımı (gün başına)
 CREATE TABLE IF NOT EXISTS api_usage (
     day      TEXT NOT NULL,           -- YYYY-MM-DD (UTC)
