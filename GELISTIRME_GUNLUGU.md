@@ -8,6 +8,17 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Uyku engeli ve temiz kapanış
+
+- Aşama 3 + grafik commit edildi.
+- Kullanıcı grafiği kendi tarayıcısında doğruladı: açılıyor. Olduğu gibi bırakıldı.
+- `start.command`: `caffeinate -i -w $$` eklendi. Pencere açıkken Mac boşta uyumaz; betik biterse caffeinate de biter. Kapak kapanınca Mac yine uyur.
+- Bulunan açık: Ctrl+C'de arka plandaki tarama servisi sinyali görmezden geliyor (betikteki arka plan işleri SIGINT'i yok sayar), sonra temizlenmeden öldürülüyordu. Düzeltme: betikte INT/HUP/TERM → temiz kapanış; `main.py` SIGTERM/SIGHUP'ı Ctrl+C gibi işler (log "Durduruldu", `stopped_at` yazılır).
+- Test (kopya klasör, ayrı port): Ctrl+C ve pencere kapatma (SIGHUP) senaryolarında tarama, panel ve caffeinate birlikte kapandı; uyku engeli çalışırken aktifti; geride süreç kalmadı.
+- Eksik: Windows'ta (`start.bat`) uyku engeli yok.
+
+---
+
 ## 2026-10-08 — Panel: token grafiği
 
 - Kullanıcı isteği: token seçilince DexScreener grafiği. Token detayına DexScreener'ın gömülebilir sayfası eklendi (`?embed=1&theme=dark`, yükseklik 650). Grafik tarayıcıda doğrudan DexScreener'dan yüklenir.
@@ -97,7 +108,7 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 - 14:10–15:48 arası hiç tarama yok: Mac uykudaydı (`pmset -g log` ile doğrulandı, 15:47:50'de uyandı). Program çökmüyor, uyanınca devam ediyor; ama uyurken izleme yok.
 
 **Bilinen eksikler**
-- **Mac uykuya geçince tarama duruyor.** Çözüm önerisi: `start.command`'da `caffeinate -i` (kapak kapanınca yine uyur) veya Aşama 7'de sunucu.
+- ~~Mac uykuya geçince tarama duruyor.~~ Çözüldü: `start.command`'da `caffeinate` (kapak kapanınca yine uyur; kalıcı çözüm Aşama 7).
 - Sadece PumpSwap destekleniyor (filtreyi geçenlerin ~%85'i). Meteora/Raydium havuzlarının kasaları havuz adresine ait değil; ayrı yöntem gerekir.
 - SOL/USDC/USDT dışında bir tokenla eşleşmiş havuzlar atlanıyor (ör. CAPYBARA).
 - Eşiğin altındaki işlemler cüzdan toplamlarına girmiyor.

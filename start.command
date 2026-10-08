@@ -1,6 +1,8 @@
 #!/bin/bash
 # Memecoin Radar — Mac başlatıcı. Finder'da çift tıklayın.
-# Tarama servisini ve paneli başlatır, paneli tarayıcıda açar. Kapatmak için bu pencerede Ctrl+C.
+# Tarama servisini ve paneli başlatır, paneli tarayıcıda açar.
+# Bu pencere açık kaldığı sürece Mac kendiliğinden uykuya geçmez (kapak kapanınca yine uyur).
+# Durdurmak için: bu pencerede Ctrl+C veya pencereyi kapatın. Her şey kapanır, Mac normal uyku ayarına döner.
 
 cd "$(dirname "$0")" || exit 1
 
@@ -16,6 +18,21 @@ fi
 
 .venv/bin/python main.py &
 SCANNER_PID=$!
-trap 'kill $SCANNER_PID 2>/dev/null; wait $SCANNER_PID 2>/dev/null' EXIT
 
+# Uyku engeli: -i = boşta kalınca uyuma (ekran yine kararabilir).
+# -w: bu betik herhangi bir şekilde biterse caffeinate de kendiliğinden biter.
+caffeinate -i -w $$ &
+CAFFEINATE_PID=$!
+
+cleanup() {
+    trap - EXIT
+    echo "Kapatılıyor..."
+    kill $SCANNER_PID $CAFFEINATE_PID 2>/dev/null
+    wait $SCANNER_PID 2>/dev/null
+}
+trap cleanup EXIT
+# Ctrl+C (INT), pencere kapatma (HUP) ve sonlandırma (TERM) hepsi temiz kapanışa gider.
+trap 'exit 0' INT HUP TERM
+
+echo "Çalışıyor. Mac bu pencere açıkken uykuya geçmeyecek. Durdurmak için Ctrl+C."
 .venv/bin/python -m streamlit run panel.py

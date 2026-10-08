@@ -54,7 +54,13 @@ Telegram'a "Merhaba!" mesajı gelmeli.
 - **Windows:** `start.bat` dosyasına çift tıklayın.
 
 Tarama servisi başlar ve panel tarayıcıda açılır (`http://127.0.0.1:8501`). Panel sadece bu bilgisayardan açılabilir.
-Kapatmak için terminal penceresinde **Ctrl+C** (Windows'ta iki pencereyi de kapatın).
+
+**Mac:** Terminal penceresi açık kaldığı sürece Mac kendiliğinden uykuya geçmez, tarama kesintisiz devam eder.
+Ekran yine kararabilir. Kapağı kapatırsanız Mac yine uyur ve tarama durur.
+
+**Durdurmak için:** Terminal penceresinde **Ctrl+C** basın veya pencereyi kapatın (Mac "çalışan işlem sonlandırılsın mı?" diye sorarsa *Sonlandır*).
+Tarama, panel ve uyku engeli birlikte kapanır; Mac normal uyku ayarına döner.
+Windows'ta iki pencereyi de kapatın.
 
 ## Sorun giderme
 - Panelin **Durum** sayfasında son log kayıtları görünür. Ayrıntılı kayıtlar `logs/radar.log` dosyasındadır.

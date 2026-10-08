@@ -11,6 +11,7 @@ Kullanım:
 import argparse
 import logging
 import os
+import signal
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -91,7 +92,15 @@ def wait(conn, minutes: int) -> None:
         db.set_status(conn, "heartbeat_at", db.utc_now())
 
 
+def _stop_on_signal(signum, frame):
+    raise KeyboardInterrupt
+
+
 def run_forever() -> None:
+    # Başlatıcı kapatırken gönderdiği sinyaller de Ctrl+C gibi temiz kapanışa gitsin.
+    signal.signal(signal.SIGTERM, _stop_on_signal)
+    if hasattr(signal, "SIGHUP"):  # Windows'ta yok
+        signal.signal(signal.SIGHUP, _stop_on_signal)
     conn = db.connect()
     db.set_status(conn, "started_at", db.utc_now())
     db.set_status(conn, "pid", os.getpid())
