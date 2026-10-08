@@ -8,6 +8,12 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v1.3.0 — 2026-10-08
+- Yeni: **tek adımda kurulum**. `kurulum/kurulum.command` (Mac) çift tıklanınca Python, git ve GitHub aracını
+  gerekirse kurar, GitHub girişini ister, programı indirir, paketleri kurar, masaüstüne kısayol koyar ve açar.
+  Kurulu bir bilgisayarda çalıştırılırsa sadece günceller.
+- Windows için `kurulum/kurulum.bat` + `kurulum.ps1` (henüz Windows'ta denenmedi).
+
 ## v1.2.0 — 2026-10-08
 - Yeni: **7/24 çalıştırma** (Aşama 7, evdeki Mac). `servis_kur.command` programı arka plan servisi olarak kurar:
   Mac açılınca kendiliğinden başlar, çökerse yeniden başlar, Mac'i uyutmaz. Kaldırmak için `servis_kaldir.command`.

@@ -37,7 +37,19 @@ Yeni bir bilgisayarda panelden bir kez daha girilir.
 ### 5. Test mesajı
 **Ayarlar → Telegram testi → Test mesajı gönder.** Telegram'a "Merhaba!" mesajı gelmeli.
 
-## Arkadaşlar için kurulum (GitHub'dan)
+## Tek adımda kurulum (önerilen)
+Önce GitHub hesabınızla depo davetini kabul edin (depo sahibi davet eder, e-postanıza gelir). Sonra:
+
+- **Mac:** `kurulum/kurulum.command` dosyasını alın (depo sahibi gönderir) ve çift tıklayın.
+  Mac "geliştirici doğrulanamadı" derse: dosyaya sağ tık → **Aç**.
+- **Windows:** `kurulum/kurulum.bat` ve `kurulum/kurulum.ps1` dosyalarını aynı klasöre koyup `kurulum.bat`'a çift tıklayın.
+  *(Windows kurulumu henüz denenmedi; sorun olursa aşağıdaki elle kurulumu kullanın.)*
+
+Kurulum dosyası eksikse Python, git ve GitHub aracını kurar, tarayıcıda GitHub girişini ister (bir kez),
+programı `MemecoinRadar` klasörüne (ev klasörünüzde) indirir, paketleri kurar, masaüstüne **Memecoin Radar**
+kısayolunu koyar ve programı açar. Tekrar çalıştırılırsa sadece günceller.
+
+## Arkadaşlar için kurulum (GitHub'dan, elle)
 Program gizli bir GitHub deposunda durur. Bir kez kurulur; sonrası panelden **Güncelle** butonuyla.
 
 1. **GitHub hesabı:** Hesabınız yoksa [github.com](https://github.com)'dan ücretsiz açın. Depo sahibi sizi davet eder; e-postanızdaki daveti kabul edin.

@@ -8,6 +8,16 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Tek adımda kurulum (v1.3.0)
+
+- Kullanıcı isteği: GitHub'dan tek tıkla indirme ve kurulum, "veya bir terminal komutu ile".
+- `kurulum/kurulum.command` (Mac): Python ≥3.11 (yoksa python.org 3.14.8 pkg + sertifikalar), Xcode komut satırı araçları (git), gh (yoksa GitHub'dan zip, yönetici izni gerekmez, `~/.memecoinradar-araclar`), `gh auth login --web` (klavye girişi /dev/tty'den, böylece `curl | bash` ile de çalışır), `gh auth setup-git`, depo erişimi kontrolü (davet kabul edilmemişse anlaşılır mesaj), `~/MemecoinRadar`'a clone veya kuruluysa `git pull`, venv + paketler, masaüstü kısayolu, start.command. Test için `MR_DEST`, `MR_TOOLS`, `MR_NO_SHORTCUT`, `MR_NO_LAUNCH`.
+- Mac'te denendi (`curl | bash` gibi, geçici klasöre): ilk kurulum, tekrar çalıştırınca güncelleme, gh'nin olmadığı durumda indirme — üçü de çalıştı; kurulan kopyada Güncelle denetimi çalışıyor. Denenmeyenler: Python'un ve Xcode araçlarının olmadığı Mac.
+- `kurulum/kurulum.ps1` + `kurulum.bat` (Windows): python.org sessiz kurulum, winget ile Git, gh zip. **Windows'ta denenmedi.** PowerShell 5.1 Türkçe karakterleri bozmasın diye UTF-8 BOM + CRLF.
+- Tek satırlık komut (`curl … | bash`, `irm … | iex`) için betiğin herkese açık bir yerde (ör. GitHub Gist) durması gerekiyor; depo gizli. Herkese açma kullanıcı onayına bağlı.
+
+---
+
 ## 2026-10-08 — Aşama 7: 7/24 çalıştırma, evdeki Mac (v1.2.0)
 
 **Durum:** Kurulum betikleri ve rehber hazır, yayınlandı. Gerçek kurulum diğer Mac'te yapılıp birlikte doğrulanacak.
