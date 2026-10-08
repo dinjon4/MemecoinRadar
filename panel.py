@@ -5,6 +5,7 @@
 
 import html
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import streamlit as st
@@ -160,6 +161,7 @@ def page_tokens() -> None:
             "Bulunduğu liste": r["source"] or "",
             "İlk görülme": local_time(r["first_seen_at"]),
             "Link": r["url"],
+            "𝕏": x_search_url(r["address"]),
             "Adres": r["address"],
         })
 
@@ -183,11 +185,17 @@ def page_tokens() -> None:
             "Hacim 24s ($)": money,
             "Whale net ($)": money,
             "Link": st.column_config.LinkColumn(display_text="DexScreener"),
+            "𝕏": st.column_config.LinkColumn(display_text="ara", help="Kontrat adresiyle X'te en yeni gönderiler"),
         },
     )
     if event.selection.rows:
         token_detail(conn, table[event.selection.rows[0]]["Adres"], whale_min)
     conn.close()
+
+
+def x_search_url(query: str) -> str:
+    """X (Twitter) aramasına giden link; 'live' = en yeni gönderiler."""
+    return f"https://x.com/search?q={quote(query)}&f=live"
 
 
 def md(text: str) -> str:
@@ -212,6 +220,15 @@ def token_detail(conn, address: str, whale_min: int) -> None:
     st.divider()
     st.subheader(f"{md(token['symbol'])} — {md(token['name'])}")
     st.caption(f"Adres: `{address}`")
+
+    c1, c2, c3 = st.columns(3)
+    c1.link_button("𝕏 Adresle ara", x_search_url(address), width="stretch",
+                   help="Kontrat adresi (CA) geçen en yeni gönderiler. Aynı isimli başka coinlerle karışmaz.")
+    cashtag = "$" + token["symbol"].lstrip("$")  # bazı semboller zaten "$" ile başlıyor
+    c2.link_button(f"𝕏 {cashtag} ara", x_search_url(cashtag), width="stretch",
+                   help="Daha çok sonuç getirir; yaygın sembollerde alakasız gönderiler de çıkabilir.")
+    if token["url"]:
+        c3.link_button("DexScreener'da aç", token["url"], width="stretch")
 
     if token["pair_address"]:
         # DexScreener'ın gömülebilir grafiği; tarayıcı doğrudan DexScreener'dan yükler.

@@ -8,6 +8,15 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Panel: X'te arama
+
+- Kullanıcı isteği: seçilen coin için tek tuşla X araması (değerlendirmeler X'te yaygın).
+- Token detayında iki buton: "Adresle ara" (kontrat adresi; kopya/aynı isimli coinlerle karışmaz) ve "$SEMBOL ara" (daha çok sonuç, yaygın sembollerde gürültülü). Ayrıca "DexScreener'da aç". Token listesine "𝕏 ara" sütunu.
+- API yok, ücret yok: `x.com/search?q=…&f=live` (en yeniler) linki kullanıcının tarayıcısında açılır.
+- Kullanıcı arayüzü beğenmiyor; örnek arayüzler isteyecek. Sonraki adım: örneklere göre panel tasarımı.
+
+---
+
 ## 2026-10-08 — Uyku engeli ve temiz kapanış
 
 - Aşama 3 + grafik commit edildi.
