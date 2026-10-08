@@ -11,5 +11,5 @@ Kurallar (ayrıntısı planda):
 - Kullanıcı yazılımcı değil: Türkçe, sade, adım adım anlat.
 - Aşama aşama ilerle; kullanıcı test etmeden sonraki aşamaya geçme.
 - Sadece izleme. Alım-satım yok, private key / seed phrase asla yok.
-- `.env` içeriğini (API anahtarları, bot token) asla ekrana basma veya loglama.
+- Gizli anahtarlar (bot token, chat ID, Helius) işletim sistemi kasasında (`radar/keys.py`); yedek olarak `.env`. Değerlerini asla ekrana basma, loglama veya dosyaya yazma.
 - Testler: `.venv/bin/python -m unittest`

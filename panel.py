@@ -6,6 +6,7 @@ Görünüm (renkler, kartlar) panel_ui.py ve .streamlit/config.toml içinde.
 
 import html
 import re
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
@@ -16,7 +17,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, VERSION, config, db, flows, logs, notify, risk, scoring, stats
+from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -522,8 +523,8 @@ def page_settings() -> None:
 
     c1, c2 = st.columns(2, gap="medium")
     with c1.container(key="card-telegram"):
-        st.markdown("#### Telegram")
-        st.caption("Bot token ve chat ID güvenlik için panelde gösterilmez; .env dosyasında durur.")
+        st.markdown("#### Telegram testi")
+        st.caption("Bot token ve chat ID'yi aşağıdaki 'Bağlantı anahtarları' bölümünden girin.")
         if st.button("📨 Test mesajı gönder"):
             try:
                 ok = notify.send("👋 <b>Merhaba!</b> Bu, panelden gönderilen bir test mesajı.", cfg)
@@ -542,6 +543,96 @@ def page_settings() -> None:
             st.caption("Bu ayarlar ilgili aşama tamamlanınca düzenlenebilir hale gelecek.")
             for s in later:
                 st.markdown(f"- **{s.label}** (Aşama {s.stage}): `{cfg[s.key]}`")
+
+    keys_section()
+
+
+KEY_STATUS = {
+    "kasa": ("✅", "Kayıtlı (şifreli kasada)"),
+    "dosya": ("⚠️", ".env dosyasında düz metin — kasaya taşıyın"),
+    None: ("❌", "Girilmemiş"),
+}
+
+
+def keys_section() -> None:
+    """Gizli anahtarların panelden girilmesi. Değerler asla gösterilmez."""
+    with st.container(key="card-keys"):
+        st.markdown("#### Bağlantı anahtarları")
+        vault = "Mac Anahtar Zinciri" if sys.platform == "darwin" else "Windows Kimlik Bilgisi Yöneticisi" \
+            if sys.platform == "win32" else "işletim sistemi kasası"
+        st.caption(f"Anahtarlar {vault}'nde şifreli saklanır; hiçbir proje dosyasında durmaz ve panelde gösterilmez. "
+                   "Kaydetmeden önce çalıştıkları denenir.")
+        if not keys.vault_available():
+            st.warning("Bu bilgisayarda şifreli kasa bulunamadı. Anahtarlar .env dosyasından okunmaya devam eder.")
+            return
+
+        in_file = [name for name in keys.NAMES if keys.source(name) == "dosya"]
+        if in_file:
+            st.warning("Bazı anahtarlar hâlâ .env dosyasında düz metin olarak duruyor.")
+            if st.button("🔐 .env'deki anahtarları kasaya taşı", type="primary"):
+                moved = keys.move_file_keys_to_vault()
+                st.success(f"{len(moved)} anahtar kasaya taşındı ve .env dosyasından silindi.")
+                st.rerun()
+
+        for name, label, help_text in keys.KEYS:
+            icon, status_text = KEY_STATUS[keys.source(name)]
+            st.markdown(f"**{label}** · {icon} {status_text}")
+            with st.form(f"form-{name}", clear_on_submit=True, border=False):
+                c1, c2 = st.columns([4, 1], vertical_alignment="bottom")
+                value = c1.text_input(label, type="password", placeholder="Yeni değer yapıştırın",
+                                      help=help_text, label_visibility="collapsed")
+                submitted = c2.form_submit_button("Kaydet", width="stretch")
+            if submitted:
+                save_key(name, value)
+            if name == "TELEGRAM_CHAT_ID" and keys.get("TELEGRAM_BOT_TOKEN"):
+                chat_id_finder()
+            if keys.source(name) == "kasa":
+                if st.button(f"Sil", key=f"del-{name}", type="tertiary", help=f"{label} kasadan silinir"):
+                    keys.remove(name)
+                    st.rerun()
+            st.write("")
+
+
+def save_key(name: str, value: str) -> None:
+    value = value.strip()
+    if not value:
+        st.error("Boş değer kaydedilmedi.")
+        return
+    try:
+        if name == "TELEGRAM_BOT_TOKEN":
+            bot = notify.check_bot_token(value)
+            note = f"@{bot} doğrulandı."
+        elif name == "HELIUS_API_KEY":
+            helius.check_key(value)
+            note = "Helius anahtarı doğrulandı."
+        else:
+            if not re.fullmatch(r"-?\d+", value):
+                st.error("Chat ID sadece rakamlardan oluşur (grup ise başında '-' olabilir).")
+                return
+            note = "Chat ID kaydedildi."
+    except (notify.TelegramNotConfigured, helius.HeliusError) as e:
+        st.error(f"Kaydedilmedi: {e}")
+        return
+    keys.save(name, value)
+    st.success(note + " Tarama servisi bir sonraki turda yeni anahtarı kullanır.")
+
+
+def chat_id_finder() -> None:
+    with st.expander("Chat ID'mi bilmiyorum"):
+        st.caption("Telegram'da bot'unuza herhangi bir mesaj yazın (ör. 'merhaba'), sonra aşağıdaki düğmeye basın.")
+        if st.button("Bot'a yazanları bul", key="find-chat"):
+            try:
+                st.session_state["chats"] = notify.find_chat_ids()
+            except notify.TelegramNotConfigured as e:
+                st.error(str(e))
+        chats = st.session_state.get("chats")
+        if chats == []:
+            st.info("Kimse bulunamadı. Bot'a bir mesaj yazıp tekrar deneyin.")
+        for chat_id, chat_name in chats or []:
+            if st.button(f"Bunu kullan: {chat_name or 'isimsiz'} ({chat_id})", key=f"use-{chat_id}"):
+                keys.save("TELEGRAM_CHAT_ID", chat_id)
+                st.session_state.pop("chats", None)
+                st.rerun()
 
 
 # --- Sistem ---

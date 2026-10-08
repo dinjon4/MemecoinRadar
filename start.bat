@@ -12,10 +12,6 @@ if not exist ".venv\Scripts\python.exe" (
     ".venv\Scripts\python.exe" -m pip install -r requirements.txt || (echo Paketler kurulamadi. & pause & exit /b 1)
 )
 
-if not exist ".env" (
-    echo UYARI: .env dosyasi yok. Telegram mesajlari gonderilemez. .env.example dosyasini .env olarak kopyalayip doldurun.
-)
-
 start "Memecoin Radar - Tarama" ".venv\Scripts\python.exe" main.py
 ".venv\Scripts\python.exe" -m streamlit run panel.py
 pause

@@ -192,7 +192,7 @@ def tokens_to_check(conn: sqlite3.Connection, cfg: dict) -> list[sqlite3.Row]:
 def run(conn: sqlite3.Connection, cfg: dict) -> None:
     """Bir akış turu: seçilen tokenların hepsini günceller. Günlük kredi bütçesi dolarsa durur."""
     if not helius.is_configured():
-        log.warning("Cüzdan akışı atlandı: .env dosyasında HELIUS_API_KEY yok.")
+        log.warning("Cüzdan akışı atlandı: Helius API anahtarı girilmemiş.")
         return
     budget = cfg["helius_daily_credit_budget"]
     tokens = tokens_to_check(conn, cfg)

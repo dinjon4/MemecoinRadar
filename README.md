@@ -12,42 +12,30 @@ Proje planı: [memecoin-radar-plan.md](memecoin-radar-plan.md)
 - **Mac:** Kurulumdan sonra *Uygulamalar → Python 3.x* klasöründeki **Install Certificates.command** dosyasına çift tıklayın.
 - **Windows:** Kurulumun ilk ekranında **"Add python.exe to PATH"** kutusunu işaretleyin.
 
-### 2. Telegram bot'u oluşturma
+### 2. Programı ilk kez başlatma
+- **Mac:** `start.command` dosyasına çift tıklayın (Mac uyarı verirse: sağ tık → *Aç*).
+- **Windows:** `start.bat` dosyasına çift tıklayın.
+
+İlk açılışta gerekli paketler kurulur (birkaç dakika). Sonra panel tarayıcıda açılır.
+
+### 3. Telegram bot'u oluşturma
 1. Telegram'da **@BotFather** hesabını açın ve `/newbot` yazın.
 2. Bot'a bir isim, sonra sonu `bot` ile biten bir kullanıcı adı verin (ör. `benim_radar_bot`).
 3. BotFather size `123456789:ABC...` gibi bir **token** verir. Bunu kimseyle paylaşmayın.
-4. Proje klasöründeki `.env.example` dosyasını kopyalayıp adını `.env` yapın.
-   - Mac'te Finder nokta ile başlayan dosyaları gizler: Finder'da **Cmd + Shift + .** ile görünür yapın.
-5. `.env` dosyasını bir metin düzenleyiciyle açın, token'ı `TELEGRAM_BOT_TOKEN=` satırının sonuna yapıştırıp kaydedin.
-6. Telegram'da yeni bot'unuzu bulun ve ona herhangi bir mesaj yazın (ör. "merhaba").
+4. Telegram'da yeni bot'unuzu bulun ve ona herhangi bir mesaj yazın (ör. "merhaba").
 
-### 3. Chat ID'yi bulma
-Proje klasöründe bir terminal açın:
-- **Mac:** Finder'da klasöre sağ tık → *Hizmetler → Klasörde Yeni Terminal*
-- **Windows:** Klasörde adres çubuğuna `cmd` yazıp Enter
+### 4. Anahtarları panelden girme
+Panelde **Ayarlar → Bağlantı anahtarları** bölümüne gidin:
+1. **Telegram bot token**: BotFather'ın verdiği token'ı yapıştırıp *Kaydet*. Panel önce token'ı dener; doğruysa bot'un adını gösterir.
+2. **Telegram chat ID**: *Chat ID'mi bilmiyorum* → *Bot'a yazanları bul* → kendi adınızın yanındaki *Bunu kullan*.
+3. **Helius API anahtarı**: [dashboard.helius.dev](https://dashboard.helius.dev) → ücretsiz hesap → *API Keys*. Anahtarı yapıştırıp *Kaydet*.
 
-İlk seferde sanal ortamı kurun:
+Anahtarlar işletim sisteminin şifreli kasasında saklanır (Mac: Anahtar Zinciri, Windows: Kimlik Bilgisi Yöneticisi).
+Hiçbir proje dosyasında durmaz, panelde gösterilmez; proje klasörünü kopyalasanız veya paketleseniz de gitmez.
+Yeni bir bilgisayarda panelden bir kez daha girilir.
 
-| Mac | Windows |
-|---|---|
-| `python3 -m venv .venv` | `py -m venv .venv` |
-| `.venv/bin/pip install -r requirements.txt` | `.venv\Scripts\pip install -r requirements.txt` |
-
-Sonra chat ID'yi bulun:
-
-| Mac | Windows |
-|---|---|
-| `.venv/bin/python main.py --find-chat-id` | `.venv\Scripts\python main.py --find-chat-id` |
-
-Çıkan numarayı `.env` içindeki `TELEGRAM_CHAT_ID=` satırına yazıp kaydedin.
-
-### 4. Test mesajı
-
-| Mac | Windows |
-|---|---|
-| `.venv/bin/python main.py --test-telegram` | `.venv\Scripts\python main.py --test-telegram` |
-
-Telegram'a "Merhaba!" mesajı gelmeli.
+### 5. Test mesajı
+**Ayarlar → Telegram testi → Test mesajı gönder.** Telegram'a "Merhaba!" mesajı gelmeli.
 
 ## Günlük kullanım
 - **Mac:** `start.command` dosyasına çift tıklayın. (İlk seferde Mac uyarı verirse: sağ tık → *Aç*.)

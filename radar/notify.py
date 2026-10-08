@@ -2,12 +2,10 @@
 
 import html
 import logging
-import os
 
 import requests
-from dotenv import load_dotenv
 
-from radar import DISCLAIMER, ENV_PATH, http
+from radar import DISCLAIMER, http, keys
 
 log = logging.getLogger(__name__)
 
@@ -15,25 +13,33 @@ TELEGRAM_MAX_LENGTH = 4096
 
 
 class TelegramNotConfigured(Exception):
-    """.env içinde Telegram bilgileri eksik."""
+    """Telegram bilgileri eksik veya hatalı."""
 
 
 def credentials() -> tuple[str, str]:
-    load_dotenv(ENV_PATH, override=True)
-    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
-    missing = [name for name, v in (("TELEGRAM_BOT_TOKEN", token), ("TELEGRAM_CHAT_ID", chat_id)) if not v]
+    token, chat_id = keys.get("TELEGRAM_BOT_TOKEN"), keys.get("TELEGRAM_CHAT_ID")
+    missing = [label for label, v in (("bot token", token), ("chat ID", chat_id)) if not v]
     if missing:
-        raise TelegramNotConfigured(f".env dosyasında eksik: {', '.join(missing)}")
+        raise TelegramNotConfigured(f"Telegram {' ve '.join(missing)} girilmemiş (panel → Ayarlar → Bağlantı anahtarları)")
     return token, chat_id
 
 
-def find_chat_ids() -> list[tuple[str, str]]:
+def check_bot_token(token: str) -> str:
+    """Token geçerliyse bot'un kullanıcı adını döner, değilse TelegramNotConfigured."""
+    try:
+        resp = http.get(f"https://api.telegram.org/bot{token.strip()}/getMe")
+    except requests.HTTPError as e:
+        raise TelegramNotConfigured(_telegram_error(e.response)) from None
+    except requests.RequestException as e:
+        raise TelegramNotConfigured(f"Telegram'a bağlanılamadı ({type(e).__name__})") from None
+    return resp.json()["result"]["username"]
+
+
+def find_chat_ids(token: str | None = None) -> list[tuple[str, str]]:
     """Bot'a son mesaj atan sohbetleri (chat_id, isim) olarak döner. Sadece bot token gerekir."""
-    load_dotenv(ENV_PATH, override=True)
-    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    token = (token or keys.get("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
-        raise TelegramNotConfigured(".env dosyasında eksik: TELEGRAM_BOT_TOKEN")
+        raise TelegramNotConfigured("Telegram bot token girilmemiş")
     try:
         resp = http.get(f"https://api.telegram.org/bot{token}/getUpdates")
     except requests.HTTPError as e:

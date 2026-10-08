@@ -8,13 +8,11 @@ Her çağrının tahmini kredisi api_usage tablosuna yazılır.
 
 import logging
 import math
-import os
 import sqlite3
 
 import requests
-from dotenv import load_dotenv
 
-from radar import ENV_PATH, db, http
+from radar import db, http, keys
 
 log = logging.getLogger(__name__)
 
@@ -28,15 +26,27 @@ class HeliusError(Exception):
 
 
 class HeliusNotConfigured(HeliusError):
-    """.env içinde HELIUS_API_KEY yok."""
+    """Helius API anahtarı girilmemiş."""
 
 
 def api_key() -> str:
-    load_dotenv(ENV_PATH, override=True)
-    key = os.getenv("HELIUS_API_KEY", "").strip()
+    key = keys.get("HELIUS_API_KEY")
     if not key:
-        raise HeliusNotConfigured(".env dosyasında eksik: HELIUS_API_KEY")
+        raise HeliusNotConfigured("Helius API anahtarı girilmemiş (panel → Ayarlar → Bağlantı anahtarları)")
     return key
+
+
+def check_key(key: str) -> None:
+    """Anahtar çalışıyorsa sessizce döner, değilse HeliusError (mesajda anahtar yok)."""
+    try:
+        resp = http.post(URL.format(key.strip()), json={"jsonrpc": "2.0", "id": 1, "method": "getSlot", "params": []})
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response is not None else "?"
+        raise HeliusError(f"Helius anahtarı kabul etmedi (HTTP {status}).") from None
+    except requests.RequestException as e:
+        raise HeliusError(f"Helius'a bağlanılamadı ({type(e).__name__}).") from None
+    if "error" in resp.json():
+        raise HeliusError("Helius anahtarı kabul etmedi.")
 
 
 def is_configured() -> bool:

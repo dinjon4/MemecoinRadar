@@ -8,6 +8,19 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Anahtarlar panelden, şifreli kasada
+
+- Kullanıcı isteği: API anahtarları panelden girilsin, dosya olarak taşınmasın. (Kullanıcı Aşama 4 bildirimlerinin sorunsuz geldiğini doğruladı.)
+- `radar/keys.py`: anahtarlar `keyring` ile işletim sistemi kasasında (Mac Anahtar Zinciri / Windows Kimlik Bilgisi Yöneticisi), servis adı `MemecoinRadar`. Kasada yoksa `.env`/ortam değişkeni yedek olarak okunur (kasası olmayan sunucular için).
+- `notify` ve `helius` artık anahtarları `keys.get()` ile alıyor. Yeni: `notify.check_bot_token()`, `helius.check_key()` (kaydetmeden önce doğrulama; hata mesajlarında anahtar yok).
+- Panel → Ayarlar → **Bağlantı anahtarları**: her anahtarın durumu (kasada / .env'de / yok; değer asla gösterilmez), şifre kutusu + doğrulayarak kaydet, sil, "Chat ID'mi bilmiyorum" (bot'a yazanları bulup tek tıkla kaydetme), ".env'deki anahtarları kasaya taşı" (taşınıp geri okunabildiği doğrulananlar .env'den silinir).
+- Taşıma düğmesine Claude basmadı; kullanıcı kendisi basacak.
+- `start.command`/`start.bat`'taki ".env yok" uyarısı kaldırıldı; README kurulum adımları panel üzerinden; `.env.example` artık "normalde gerekmez" diyor; `keyring==25.7.0` requirements'ta.
+- Testler: 82 (bellekte sahte kasa; gerçek Anahtar Zinciri'ne dokunulmuyor).
+- Not: Python sürümü değişirse (ör. yeni Python kurulumu) Mac, kasaya erişim için bir kez izin isteyebilir.
+
+---
+
 ## 2026-10-08 — Aşama 4: Skor ve Telegram uyarısı
 
 **Durum:** Kod tamam; gerçek bir token için test uyarısı Telegram'a gönderildi. Kullanıcının programı yeniden başlatıp ilk gerçek uyarıları görmesi bekleniyor.

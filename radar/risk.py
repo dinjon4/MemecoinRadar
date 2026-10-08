@@ -200,7 +200,7 @@ def dev_check(conn: sqlite3.Connection, cfg: dict, token: sqlite3.Row, r: rugche
         state = conn.execute("SELECT * FROM dev_state WHERE token = ?", (token["address"],)).fetchone()
 
     if state is None:
-        return Check("dev_sold", "unknown", "Dev satışı bilinmiyor", "Helius ayarlanmamış (.env: HELIUS_API_KEY).")
+        return Check("dev_sold", "unknown", "Dev satışı bilinmiyor", "Helius API anahtarı girilmemiş (panel → Ayarlar → Bağlantı anahtarları).")
     received, sent = state["received"], state["sent"]
     short = f"{r.creator[:4]}…{r.creator[-4:]}"
     if received <= 0:

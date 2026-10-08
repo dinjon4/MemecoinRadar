@@ -12,10 +12,6 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/pip install -r requirements.txt || { echo "Paketler kurulamadı."; read -r; exit 1; }
 fi
 
-if [ ! -f ".env" ]; then
-    echo "UYARI: .env dosyası yok. Telegram mesajları gönderilemez. .env.example dosyasını .env olarak kopyalayıp doldurun."
-fi
-
 .venv/bin/python main.py &
 SCANNER_PID=$!
 

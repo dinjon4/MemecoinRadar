@@ -2,6 +2,8 @@ requests==2.34.2
 python-dotenv==1.2.4
 PyYAML==6.0.3
 streamlit==1.65.0
+# Gizli anahtarlar için işletim sistemi kasası (Mac Anahtar Zinciri / Windows Kimlik Bilgisi Yöneticisi)
+keyring==25.7.0
 # Panel grafikleri (Streamlit ile birlikte gelir; sürüm sabitlensin diye ayrıca yazıldı)
 altair==6.3.0
 pandas==3.0.6

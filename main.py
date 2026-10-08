@@ -210,7 +210,7 @@ def main() -> None:
         try:
             ok = notify.send("👋 <b>Merhaba!</b> Memecoin Radar Telegram bağlantısı çalışıyor.", cfg)
         except notify.TelegramNotConfigured as e:
-            log.error("%s. .env.example dosyasını .env olarak kopyalayıp doldurun.", e)
+            log.error("%s.", e)
             ok = False
         sys.exit(0 if ok else 1)
 
