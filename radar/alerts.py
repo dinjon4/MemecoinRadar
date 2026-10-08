@@ -13,7 +13,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
-from radar import db, fmt, notify, risk, scoring
+from radar import db, fmt, notify, risk, scoring, tracking
 from radar.notify import escape as e
 from radar.sources import helius
 
@@ -94,33 +94,41 @@ def tokens_to_score(conn: sqlite3.Connection, cfg: dict) -> list[sqlite3.Row]:
 
 
 def run(conn: sqlite3.Connection, cfg: dict) -> int:
-    """Skorları günceller ve gereken uyarıları gönderir. Gönderilen uyarı sayısını döner."""
+    """Skorları günceller, gereken uyarıları gönderir ve takip gruplarını günceller.
+    Gönderilen uyarı sayısını döner."""
     now = datetime.now(timezone.utc)
     sent = 0
+    telegram_ok = True
+    scored: list[tuple[sqlite3.Row, int | None]] = []  # karşılaştırma grubu seçimi için
     for token in tokens_to_score(conn, cfg):
         s = scoring.compute(conn, cfg, token)
         if s is None:
             conn.execute("DELETE FROM scores WHERE token = ?", (token["address"],))
+            scored.append((token, None))
             continue
         scoring.save(conn, s)
+        scored.append((token, s.score))
         previous = last_alert(conn, token["address"])
         ok, reason = should_alert(cfg, s.score, previous, now)
-        if not ok:
+        if not ok or not telegram_ok:
             continue
         message = format_message(conn, cfg, token, s, previous)
         try:
             delivered = notify.send(message, cfg)
         except notify.TelegramNotConfigured as err:
             log.warning("Uyarı gönderilemedi: %s", err)
-            break
+            telegram_ok = False
+            continue
         if not delivered:
             continue  # bir sonraki turda tekrar denenir
         conn.execute("INSERT INTO alerts (token, score, sent_at, dry_run, message) VALUES (?, ?, ?, ?, ?)",
                      (token["address"], s.score, db.utc_now(), int(cfg["dry_run"]), message))
+        tracking.start(conn, token, "alert", s.score)
         sent += 1
         log.info("Uyarı: %s skor %d (%s)%s", token["symbol"], s.score, reason, " [deneme modu]" if cfg["dry_run"] else "")
+    controls = tracking.add_controls(conn, cfg, scored)
     conn.commit()
-    log.info("Skor turu: %d uyarı.", sent)
+    log.info("Skor turu: %d uyarı, %d token karşılaştırma grubuna eklendi.", sent, controls)
     return sent
 
 

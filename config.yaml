@@ -52,6 +52,20 @@ alert_cooldown_hours: 6
 # Erken tekrar uyarı için skor artışı: Skor bu kadar artarsa bekleme süresi beklenmeden tekrar uyarılır.
 realert_score_jump: 15
 
+# --- Takip ---
+# Karşılaştırma grubu oranı (%): Uyarı almayan tokenların bu kadarı karşılaştırma için izlenir.
+control_sample_pct: 30
+# 'Yükseldi' eşiği (%): 24 saat sonra piyasa değeri bu kadar arttıysa 'yükseldi' sayılır.
+outcome_up_pct: 50
+# 'Çöktü' eşiği (%): 24 saat sonra piyasa değeri bu kadar düştüyse (veya likidite boşaltıldıysa) 'çöktü' sayılır.
+outcome_crash_pct: 70
+# Haftalık özet gönder: Her hafta Telegram'a performans özeti gönderilir.
+weekly_summary_enabled: true
+# Haftalık özet günü (1=Pzt … 7=Paz): Özetin gönderileceği gün.
+weekly_summary_day: 1
+# Haftalık özet saati: Türkiye saatiyle. Bilgisayar o saatte kapalıysa açılınca gönderilir.
+weekly_summary_hour: 10
+
 # --- Çalışma ---
 # Deneme modu (dry run): Açıksa Telegram'a mesaj gönderilmez, sadece terminale ve loga yazılır.
 dry_run: false

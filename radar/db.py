@@ -103,6 +103,21 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_token ON alerts(token, sent_at);
 
+-- Aşama 5: takip edilen tokenlar (uyarı grubu ve karşılaştırma grupları)
+CREATE TABLE IF NOT EXISTS tracking (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    token       TEXT NOT NULL,
+    cohort      TEXT NOT NULL,        -- alert / low / veto
+    score       INTEGER,              -- seçildiği andaki skor (veto ise boş)
+    started_at  TEXT NOT NULL,
+    price_0 REAL, mc_0 REAL, liq_0 REAL,
+    price_1h REAL,  mc_1h REAL,  liq_1h REAL,  checked_1h TEXT,
+    price_6h REAL,  mc_6h REAL,  liq_6h REAL,  checked_6h TEXT,
+    price_24h REAL, mc_24h REAL, liq_24h REAL, checked_24h TEXT,
+    done        INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (token, cohort)
+);
+
 -- Ücretli/limitli API'lerin tahmini kredi kullanımı (gün başına)
 CREATE TABLE IF NOT EXISTS api_usage (
     day      TEXT NOT NULL,           -- YYYY-MM-DD (UTC)

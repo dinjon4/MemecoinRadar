@@ -7,6 +7,7 @@ Kullanım:
     python main.py --find-chat-id   # Telegram chat ID'nizi bulur
     python main.py --token ADRES    # bir tokenın risk, cüzdan akışı ve skoru
     python main.py --token ADRES --send-alert  # o tokenın uyarı mesajını test olarak gönderir
+    python main.py --weekly         # haftalık performans özetinin önizlemesi
 """
 
 import argparse
@@ -17,7 +18,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring
+from radar import VERSION, alerts, config, db, discovery, flows, logs, notify, risk, scoring, tracking
 from radar.sources import helius
 
 log = logging.getLogger("radar")
@@ -45,7 +46,9 @@ def run_scan(conn, cfg: dict, force_flow: bool = False) -> discovery.ScanResult:
     # Skor sadece risk veya akış verisi yenilendiğinde değişir.
     if updated:
         alerts.run(conn, cfg)
+    tracking.update(conn)
     alerts.maybe_heartbeat(conn, cfg)
+    tracking.maybe_weekly(conn, cfg)
     return result
 
 
@@ -179,11 +182,19 @@ def main() -> None:
     parser.add_argument("--test-telegram", action="store_true", help="Telegram'a deneme mesajı gönder")
     parser.add_argument("--find-chat-id", action="store_true", help="bot'a mesaj atan sohbetlerin chat ID'sini göster")
     parser.add_argument("--token", metavar="ADRES", help="bir tokenın risk, cüzdan akışı ve skorunu göster")
+    parser.add_argument("--weekly", action="store_true", help="haftalık özetin önizlemesini göster")
     parser.add_argument("--send-alert", action="store_true",
                         help="--token ile: o tokenın uyarı mesajını test olarak Telegram'a gönder")
     args = parser.parse_args()
 
     logs.setup()
+
+    if args.weekly:
+        cfg = load_config(None)
+        conn = db.connect()
+        print(tracking.weekly_message(conn, cfg))
+        conn.close()
+        return
 
     if args.token:
         cfg = load_config(None)

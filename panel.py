@@ -17,7 +17,7 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats
+from radar import CURRENT_STAGE, VERSION, config, db, flows, keys, logs, notify, risk, scoring, stats, tracking
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -480,6 +480,125 @@ def page_alerts() -> None:
             st.code(telegram_to_text(r["message"]) + "\n\nYatırım tavsiyesi değildir.", language=None, wrap_lines=True)
 
 
+# --- Performans ---
+
+OUTCOME_LABELS = {"up": "🟢 yükseldi", "crash": "🔴 çöktü", "flat": "⚪ yatay", None: "⏳ sürüyor"}
+
+
+def pct_text(value: float | None) -> str:
+    return "—" if value is None else f"%{value:.0f}"
+
+
+def page_performance() -> None:
+    cfg = load_config_or_none() or config.defaults()
+    conn = db.connect()
+    stats_by_cohort = tracking.cohort_stats(conn, cfg)
+    buckets = tracking.score_buckets(conn, cfg)
+    rows = conn.execute(
+        "SELECT tr.*, t.symbol, t.url FROM tracking tr LEFT JOIN tokens t ON t.address = tr.token "
+        "ORDER BY tr.started_at DESC LIMIT 500"
+    ).fetchall()
+
+    ui.header("Performans", f"Skor işe yarıyor mu? · 24 saat sonra: yükseldi = MC +%{cfg['outcome_up_pct']}+, "
+                            f"çöktü = MC −%{cfg['outcome_crash_pct']} veya likidite boşaltıldı")
+    items = []
+    for cohort, label in tracking.COHORTS.items():
+        s = stats_by_cohort[cohort]
+        items.append({
+            "label": label,
+            "value": f"{pct_text(s.pct(s.up))} yükseldi" if s.finished else "—",
+            "value_class": "mr-pos" if s.finished else "",
+            "chip": ui.chip(f"{pct_text(s.pct(s.crash))} çöktü", "down") if s.finished else "",
+            "sub": tracking.summary_line(s),
+        })
+    ui.kpi_grid(items)
+
+    finished = sum(s.finished for s in stats_by_cohort.values())
+    left, right = st.columns([1.3, 1], gap="medium")
+    with left.container(key="card-glow-outcomes"):
+        st.markdown("#### 24 saat sonra ne oldu?")
+        if not finished:
+            st.caption("Henüz 24 saati dolan token yok. Uyarı ve karşılaştırma grupları birikiyor; "
+                       "ilk sonuçlar ilk uyarıdan 24 saat sonra görünür.")
+        else:
+            data = pd.DataFrame([
+                {"grup": tracking.COHORTS[c], "sonuç": name, "oran": 100 * n / s.finished, "adet": n}
+                for c, s in stats_by_cohort.items() if s.finished
+                for name, n in (("yükseldi", s.up), ("yatay", s.flat), ("çöktü", s.crash))
+            ])
+            chart = alt.Chart(data).mark_bar(cornerRadius=6).encode(
+                y=alt.Y("grup:N", title=None, sort=list(tracking.COHORTS.values()),
+                        axis=alt.Axis(labelColor=ui.TEXT, domain=False, ticks=False)),
+                x=alt.X("oran:Q", title=None, stack="normalize", axis=alt.Axis(format="%", labelColor=ui.MUTED,
+                                                                                  gridColor=ui.BORDER, domain=False)),
+                color=alt.Color("sonuç:N", sort=["yükseldi", "yatay", "çöktü"],
+                                scale=alt.Scale(domain=["yükseldi", "yatay", "çöktü"], range=[ui.LIME, ui.MUTED, ui.RED]),
+                                legend=alt.Legend(orient="bottom", title=None, labelColor=ui.TEXT)),
+                tooltip=["grup", "sonuç", alt.Tooltip("adet:Q", title="Token"), alt.Tooltip("oran:Q", format=".0f", title="%")],
+            ).properties(height=200).configure_view(strokeWidth=0).configure(background="transparent")
+            st.altair_chart(chart, width="stretch")
+            st.caption("Uyarı verilenler diğer gruplardan belirgin şekilde daha iyi değilse skor ayarlanmalı.")
+    with right.container(key="card-buckets"):
+        st.markdown("#### Skor aralığına göre")
+        st.dataframe(
+            [{"Skor": b["label"], "Token": b["n"],
+              "Yükseldi": pct_text(100 * b["up"] / b["n"]) if b["n"] else "—",
+              "Çöktü": pct_text(100 * b["crash"] / b["n"]) if b["n"] else "—",
+              "Ortanca değişim": f"{b['median_change']:+.0f}%" if b["median_change"] is not None else "—"}
+             for b in buckets],
+            hide_index=True, width="stretch",
+        )
+        st.caption("Yüksek skorlar daha iyi sonuç veriyorsa skor işe yarıyor demektir.")
+
+    with st.container(key="card-tracked"):
+        st.markdown("#### Takip edilen tokenlar")
+        if not rows:
+            st.caption("Henüz takip edilen token yok.")
+        else:
+            change = lambda r, h: tracking.change(r["mc_0"], r[f"mc_{h}h"]) if r[f"checked_{h}h"] else None
+            st.dataframe(
+                [{
+                    "Sembol": r["symbol"] or r["token"][:8],
+                    "Grup": tracking.COHORTS[r["cohort"]],
+                    "Skor": r["score"],
+                    "Başlangıç": local_time(r["started_at"], "%d.%m %H:%M"),
+                    "MC başta ($)": r["mc_0"],
+                    "1 saat": change(r, 1),
+                    "6 saat": change(r, 6),
+                    "24 saat": change(r, 24),
+                    "Sonuç": OUTCOME_LABELS[tracking.outcome(r, cfg)],
+                    "Link": r["url"],
+                } for r in rows],
+                hide_index=True, width="stretch", height=min(500, 40 + 35 * len(rows)),
+                column_config={
+                    "MC başta ($)": st.column_config.NumberColumn(format="compact"),
+                    "1 saat": st.column_config.NumberColumn(format="%+.0f%%"),
+                    "6 saat": st.column_config.NumberColumn(format="%+.0f%%"),
+                    "24 saat": st.column_config.NumberColumn(format="%+.0f%%"),
+                    "Link": st.column_config.LinkColumn(display_text="DexScreener"),
+                },
+            )
+
+    with st.container(key="card-weekly"):
+        st.markdown("#### Haftalık özet")
+        days = ["", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
+        last = db.get_status(conn).get("last_weekly_at")
+        st.caption(f"Her {days[cfg['weekly_summary_day']]} {cfg['weekly_summary_hour']:02d}:00'da Telegram'a gider"
+                   + ("" if cfg["weekly_summary_enabled"] else " (şu an kapalı)")
+                   + (f" · son gönderim {local_time(last, '%d.%m %H:%M')}" if last else ""))
+        message = tracking.weekly_message(conn, cfg)
+        st.code(telegram_to_text(message), language=None, wrap_lines=True)
+        if st.button("📨 Şimdi gönder"):
+            try:
+                ok = notify.send(message, cfg)
+            except notify.TelegramNotConfigured as e:
+                st.error(str(e))
+            else:
+                st.success("Gönderildi." if ok and not cfg["dry_run"] else
+                           "Deneme modu açık: gönderilmedi." if ok else "Gönderilemedi, Sistem sayfasına bakın.")
+    conn.close()
+
+
 # --- Ayarlar ---
 
 def setting_input(s: config.Setting, value):
@@ -688,6 +807,7 @@ nav = st.navigation([
     st.Page(page_overview, title="Genel Bakış", icon=":material/space_dashboard:", default=True),
     st.Page(page_tokens, title="Tokenlar", icon=":material/toll:", url_path="tokenlar"),
     st.Page(page_alerts, title="Uyarılar", icon=":material/notifications:", url_path="uyarilar"),
+    st.Page(page_performance, title="Performans", icon=":material/insights:", url_path="performans"),
     st.Page(page_settings, title="Ayarlar", icon=":material/tune:", url_path="ayarlar"),
     st.Page(page_system, title="Sistem", icon=":material/monitor_heart:", url_path="sistem"),
 ])

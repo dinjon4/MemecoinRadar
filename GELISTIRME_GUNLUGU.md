@@ -8,6 +8,27 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Aşama 5: Takip ve haftalık özet
+
+**Durum:** Kod tamam, sahte veriyle panelde denendi. Gerçek sonuçlar için veri birikmesi gerekiyor (ilk 24 saatlik sonuçlar ilk uyarıdan 24 saat sonra). Kullanıcı Aşama 4 bildirimlerini doğruladı.
+
+**Yapılanlar**
+- `radar/tracking.py`: üç grup — `alert` (uyarı verilen her token), `low` (eşik altı skorlulardan örnek), `veto` (elenenlerden örnek). Örnekleme adrese göre sabit (%30, `control_sample_pct`). Seçildiği andaki fiyat/MC/likidite kaydedilir; 1, 6, 24 saat sonra DexScreener'dan ölçülür. Bilgisayar uyuduysa ölçüm geç yapılır, gerçek zamanı saklanır.
+- Sonuç: 24 saatte MC +%50 → yükseldi; −%70 veya likidite < $1.000 (ya da DexScreener'dan kaybolmuş) → çöktü; arası yatay. Eşikler ayarlardan.
+- Haftalık özet: grup başına yükselme/çöküş oranı ve ortanca değişim; her grupta ≥5 sonuç varsa "uyarılar düşük skorlulara göre daha iyi/kötü/benzer"; en sık eleme sebepleri. Varsayılan Pazartesi 10:00 (Türkiye); bilgisayar kapalıysa açılınca gider.
+- `tracking` tablosu; yeni ayarlar (Takip grubu): `control_sample_pct`, `outcome_up_pct`, `outcome_crash_pct`, `weekly_summary_enabled/day/hour`.
+- Skor turu artık her skorlanan token için karşılaştırma örneklemesi yapıyor; Telegram ayarlı değilse de skorlama ve takip sürüyor.
+- Panel: **Performans** sayfası (grup kartları, 24 saat sonuç çubukları, skor aralığı tablosu, takip edilen tokenlar 1/6/24 saat değişimiyle, haftalık özet önizlemesi + "Şimdi gönder").
+- Terminal: `python main.py --weekly` önizleme.
+- Testler: 93.
+
+**Bilinen eksikler**
+- Aşama 5'ten önce gönderilmiş uyarılar takipte yok (başlangıç değerleri bilinmiyor).
+- Bir token önce "düşük skor" grubuna girip sonra uyarı alırsa iki grupta da durur (seçildiği andaki duruma göre dürüst ama karşılaştırmayı biraz bulandırabilir).
+- MC değişimi kullanılıyor; MC yoksa fiyat değişimi.
+
+---
+
 ## 2026-10-08 — Anahtarlar panelden, şifreli kasada
 
 - Kullanıcı isteği: API anahtarları panelden girilsin, dosya olarak taşınmasın. (Kullanıcı Aşama 4 bildirimlerinin sorunsuz geldiğini doğruladı.)
