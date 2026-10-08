@@ -1,0 +1,6 @@
+requests==2.34.2
+python-dotenv==1.2.4
+PyYAML==6.0.3
+streamlit==1.65.0
+# Windows'ta saat dilimi verisi (Türkiye saati) için gerekli.
+tzdata==2026.5

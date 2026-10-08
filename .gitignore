@@ -1,0 +1,21 @@
+# Gizli anahtarlar
+.env
+
+# Sanal ortam
+.venv/
+
+# Çalışma verisi
+data/*.db
+data/*.db-*
+logs/
+
+# Python
+__pycache__/
+*.pyc
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+
+# Paketler
+dist/

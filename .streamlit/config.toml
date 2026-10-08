@@ -1,0 +1,13 @@
+[server]
+# Panel sadece bu bilgisayardan açılabilir.
+address = "127.0.0.1"
+port = 8501
+
+[client]
+# "Deploy" gibi geliştirici butonlarını gizle.
+toolbarMode = "minimal"
+
+[browser]
+serverAddress = "127.0.0.1"
+# Streamlit'e kullanım istatistiği gönderme.
+gatherUsageStats = false
