@@ -8,6 +8,17 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — GitHub'a yüklendi
+
+- Kullanıcı onayıyla `gh` Homebrew ile kuruldu; kullanıcı `gh auth login` ile kendisi giriş yaptı (hesap: dinjon4).
+- Gizli depo oluşturuldu ve yüklendi: https://github.com/dinjon4/MemecoinRadar (PRIVATE, 51 dosya, `main` → `origin/main`).
+- Yüklemeden önce kontrol: depoda `.env`, veritabanı, loglar, `config.yaml`, paketler yok.
+- Bu kurulumda `updater.check()` gerçek depoyla çalışıyor (0 yeni değişiklik).
+- **Bundan sonra güncelleme yayınlamak:** değişiklikler commit edilip `git push` yapılır; arkadaşların panelinde "🔔 Yeni sürüm var" çıkar.
+- Kalan: arkadaşları depoya davet etmek (GitHub → depo → Settings → Collaborators), Windows'ta başlatıcı döngüsünü denemek.
+
+---
+
 ## 2026-10-08 — Arkadaşlarla paylaşım: GitHub + Güncelle butonu (hazırlık)
 
 **Durum:** Hazırlık tamam ve test edildi; GitHub'a yükleme kullanıcının son onayını bekliyor.
