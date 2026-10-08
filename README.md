@@ -51,7 +51,7 @@ Program gizli bir GitHub deposunda durur. Bir kez kurulur; sonrası panelden **G
    Sorulara: `GitHub.com` → `HTTPS` → "Authenticate Git with your GitHub credentials?" **Yes** → `Login with a web browser`. Tarayıcıda onaylayın.
 5. **Programı indirme:** Programın duracağı klasöre geçip (ör. `cd Desktop`) yazın:
    ```
-   gh repo clone DEPO_SAHIBI/MemecoinRadar
+   gh repo clone dinjon4/MemecoinRadar
    ```
 6. **Başlatma:** `MemecoinRadar` klasöründeki `start.command` (Mac) veya `start.bat` (Windows) dosyasına çift tıklayın.
 7. **Kendi anahtarlarınız:** Panel → Ayarlar → Bağlantı anahtarları. Herkes **kendi** Telegram bot'unu ve **kendi** ücretsiz Helius anahtarını kullanmalı (aynı Helius anahtarı paylaşılırsa aylık kota birkaç kat hızlı biter).
