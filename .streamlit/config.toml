@@ -11,3 +11,29 @@ toolbarMode = "minimal"
 serverAddress = "127.0.0.1"
 # Streamlit'e kullanım istatistiği gönderme.
 gatherUsageStats = false
+
+# Tasarım: koyu yeşil zemin, limon yeşili vurgu (panel_ui.py ile uyumlu).
+[theme]
+base = "dark"
+primaryColor = "#c5f23a"
+backgroundColor = "#0a110e"
+secondaryBackgroundColor = "#13201a"
+textColor = "#e8efe9"
+greenColor = "#c5f23a"
+redColor = "#ff6b6b"
+linkColor = "#c5f23a"
+linkUnderline = false
+font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif"
+headingFontWeights = [700, 650, 600]
+baseRadius = "14px"
+buttonRadius = "12px"
+borderColor = "#1c2b23"
+dataframeBorderColor = "#1c2b23"
+dataframeHeaderBackgroundColor = "#0f1914"
+showWidgetBorder = false
+showSidebarBorder = false
+chartCategoricalColors = ["#c5f23a", "#ff6b6b", "#5ad1a4", "#f5b942", "#7f9289"]
+
+[theme.sidebar]
+backgroundColor = "#0c1511"
+secondaryBackgroundColor = "#14221b"

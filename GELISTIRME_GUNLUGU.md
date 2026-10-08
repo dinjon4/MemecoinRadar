@@ -8,6 +8,19 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-08 — Panel: yeni tasarım
+
+- Kullanıcı bir örnek tasarım gönderdi (koyu yeşil zemin, yuvarlak kartlar, limon yeşili vurgu, parlayan çizgi grafik, solda menü, üstte özet kartları). Streamlit'te kalınarak buna yaklaşıldı; birebir için paneli baştan yazmak gerekirdi (kullanıcıya söylendi).
+- `.streamlit/config.toml`: koyu yeşil tema, limon vurgu (#c5f23a), yuvarlak köşeler, kenar çubuğu rengi.
+- `panel_ui.py`: CSS ve HTML parçaları (özet kartları, liste kartları, rozetler, renkli sembol avatarları). Dış metinler (token adları) `esc()` ile kaçırılıyor.
+- `radar/stats.py`: Genel Bakış verileri (özet, saatlik whale akışı, öne çıkanlar, son işlemler, risk uyarıları) + 5 test.
+- Sayfalar: **Genel Bakış** (yeni ana sayfa: 4 özet kartı, 24 saatlik birikimli whale akışı grafiği, öne çıkanlar, son büyük işlemler, risk uyarıları), **Tokenlar** (token detayı: başlık kartı, özet kartları, X/DexScreener butonları, grafik, risk ve cüzdan kartları yan yana), **Ayarlar** (grup kartları, iki sütun), **Sistem** (eski Durum: tur zamanları, Helius kredisi, bağlantılar, loglar).
+- `static/logo.svg`, menü ikonları (Material).
+- Grafik: Altair'e veri ham sözlükle verilince çizgi çizilmiyordu; pandas DataFrame ile düzeldi. `altair` ve `pandas` requirements'a sabitlendi.
+- Testler: 57.
+
+---
+
 ## 2026-10-08 — Panel: X'te arama
 
 - Kullanıcı isteği: seçilen coin için tek tuşla X araması (değerlendirmeler X'te yaygın).

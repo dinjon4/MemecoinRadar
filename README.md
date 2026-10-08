@@ -63,6 +63,6 @@ Tarama, panel ve uyku engeli birlikte kapanır; Mac normal uyku ayarına döner.
 Windows'ta iki pencereyi de kapatın.
 
 ## Sorun giderme
-- Panelin **Durum** sayfasında son log kayıtları görünür. Ayrıntılı kayıtlar `logs/radar.log` dosyasındadır.
+- Panelin **Sistem** sayfasında son log kayıtları ve API kullanımı görünür; **Genel Bakış** sayfası özet verir. Ayrıntılı kayıtlar `logs/radar.log` dosyasındadır.
 - Ayarlar panelin **Ayarlar** sayfasından değiştirilir (ya da `config.yaml` elle düzenlenir).
 - Testleri çalıştırmak için: `.venv/bin/python -m unittest` (Windows: `.venv\Scripts\python -m unittest`)
