@@ -8,6 +8,18 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-09 — Depo herkese açık (v2.0.0)
+
+- Sorun: arkadaşın Mac'inde kurulum GitHub girişi istedi; arkadaşın kullanıcının GitHub/Google hesabına erişimi yok (ve kendi GitHub hesabı yok). Gizli depo için her arkadaşın kendi GitHub hesabı + davet gerekiyordu.
+- Seçenekler sunuldu (kurulumsuz tek Mac + Tailscale, sadece-okuma erişim kodu, arkadaş GitHub hesabı açsın, depoyu aç). **Kullanıcı kararı: depoyu herkese aç.**
+- Açmadan önce tüm geçmiş tarandı: anahtar/token biçimi, chat ID, bot adı yok; `.env` hiç commit edilmemiş. Tek kişisel bilgi commit e-postasıydı (17 commit + 5 etiket).
+- Kullanıcı onayıyla geçmiş yeniden yazıldı: e-posta GitHub'ın gizli adresiyle değiştirildi (`git filter-branch`), etiketler yeniden oluşturuldu, repo içi `user.email` gizli adrese ayarlandı. Belgelerdeki commit kodları (eski commit'lere GitHub'da ulaşılmasın diye) tüm geçmişten temizlendi; artık belgelere commit kodu değil sürüm adı yazılıyor. Yeniden yazmadan önce tam yedek alındı (git bundle, Claude'un geçici klasöründe).
+- Kalan risk: GitHub, üzerine yazılan eski commit'leri bir süre daha saklayabilir; kodları bilinmeden bulunmaları pratikte mümkün değil, tamamen silinmeleri için GitHub desteğine başvurmak gerekir.
+- Kurulum betikleri sadeleşti: gh ve GitHub girişi kaldırıldı; düz `git clone https://github.com/dinjon4/MemecoinRadar.git`. Gist güncellendi.
+- v2.0.0: geçmiş yeniden yazıldığı için eski kurulumlar güncellenemez (yeniden kurulmalı). Pratikte etkilenen kurulum yok (arkadaşın denemesi giriş adımında kalmıştı).
+
+---
+
 ## 2026-10-08 — Tek satır komutla kurulum (v1.3.1)
 
 - Kullanıcı onayıyla herkese açık Gist: https://gist.github.com/dinjon4/b48b601a6dd4fc5b3bb0a35b88cf3dfc (sadece `kurulum.command` ve `kurulum.ps1`; gizli bilgi ve program kodu yok, sadece depo adı görünür).

@@ -8,6 +8,12 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v2.0.0 — 2026-10-09
+- Program artık **herkese açık** GitHub deposunda: kurulum için GitHub hesabı, davet veya giriş **gerekmez**.
+- Kurulum sadeleşti: tek satır komut veya `kurulum.command` sadece Python ve git'i (gerekirse) kurar, programı indirir.
+- Önemli: Daha önce (v1.3.1 ve öncesi) indirilmiş kurulumlar güncellenemez; klasörü silip yeniden kurun.
+  Ayarlarınızı (`config.yaml`) ve verilerinizi (`data/`) saklamak isterseniz önce başka yere kopyalayın.
+
 ## v1.3.1 — 2026-10-08
 - Tek satır komutla kurulum: Mac'te Terminal'e, Windows'ta PowerShell'e yapıştırılacak komutlar README'de.
 

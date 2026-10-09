@@ -14,7 +14,8 @@ Kurallar (ayrıntısı planda):
 - Gizli anahtarlar (bot token, chat ID, Helius) işletim sistemi kasasında (`radar/keys.py`); yedek olarak `.env`. Değerlerini asla ekrana basma, loglama veya dosyaya yazma.
 - Testler: `.venv/bin/python -m unittest`
 
-Sürüm ve yayın (kod gizli GitHub deposunda: dinjon4/MemecoinRadar; arkadaşlar panelden "Güncelle" ile alır):
+Sürüm ve yayın (kod herkese açık GitHub deposunda: dinjon4/MemecoinRadar — kullanıcı kararı 2026-10-09;
+arkadaşlar panelden "Güncelle" ile alır):
 - Sürüm `radar/__init__.py` içindeki `VERSION` (anlamsal sürümleme). Yükseltme kararını Claude verir:
   hata düzeltmesi/küçük iyileştirme → son rakam (1.0.1), yeni özellik/aşama → orta (1.1.0),
   kurulumu bozan/veri sıfırlayan değişiklik → ilk (2.0.0).
@@ -26,4 +27,5 @@ Sürüm ve yayın (kod gizli GitHub deposunda: dinjon4/MemecoinRadar; arkadaşla
   Gist'e program kodu veya gizli bilgi konmaz.
 - Yayın izni (kullanıcı kararı, 2026-10-08): testler geçince sürüm yükseltilip **sormadan** gönderilir;
   gönderdikten sonra kullanıcıya hangi sürümün ne içerdiği kısaca bildirilir.
-  Depo gizli kalır; depoyu herkese açmak veya başka yere göndermek için yine sorulur.
+  Depo herkese açık: commit'lere asla gizli/kişisel bilgi (anahtar, chat ID, bot adı, e-posta) girmez;
+  commit e-postası GitHub'ın gizli adresi (repo içi `user.email` ayarlı). Belgelere commit kodu yazılmaz, sürüm adı yazılır.

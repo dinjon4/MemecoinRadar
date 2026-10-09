@@ -4,7 +4,7 @@
 #   1) kurulum.bat dosyasına çift tıklayın (bu dosya ile aynı klasörde olmalı).
 #   2) PowerShell'e tek satır:  irm <bu dosyanın herkese açık adresi> | iex
 #
-# Yaptıkları: eksikse Python, Git ve GitHub aracını (gh) kurar; GitHub'a giriş ister (bir kez, tarayıcıda);
+# Yaptıkları: eksikse Python ve Git'i kurar; hesap veya giriş gerekmez;
 # programı %USERPROFILE%\MemecoinRadar klasörüne indirir; paketleri kurar; masaüstüne kısayol koyar; programı açar.
 # Zaten kuruluysa sadece günceller ve açar. Bu dosyada gizli bilgi yoktur.
 # NOT: Bu betik Windows'ta henüz denenmedi.
@@ -12,9 +12,7 @@
 $ErrorActionPreference = "Stop"
 $Repo = "dinjon4/MemecoinRadar"
 $Dest = if ($env:MR_DEST) { $env:MR_DEST } else { Join-Path $env:USERPROFILE "MemecoinRadar" }
-$Tools = Join-Path $env:LOCALAPPDATA "MemecoinRadar-araclar"
 $PyVersion = "3.14.8"
-$GhFallback = "2.102.0"
 
 function Say($m)  { Write-Host "`n> $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "! $m" -ForegroundColor Yellow }
@@ -64,37 +62,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 Write-Host "git: $(git --version)"
 
-# --- 3. GitHub aracı (gh) ---
-Say "GitHub aracı (gh) kontrol ediliyor"
-$Gh = (Get-Command gh -ErrorAction SilentlyContinue).Source
-if (-not $Gh -and (Test-Path "$Tools\gh\bin\gh.exe")) { $Gh = "$Tools\gh\bin\gh.exe" }
-if (-not $Gh) {
-    $ver = $GhFallback
-    try { $ver = (Invoke-RestMethod "https://api.github.com/repos/cli/cli/releases/latest").tag_name.TrimStart("v") } catch {}
-    Say "gh $ver indiriliyor"
-    $zip = Join-Path $env:TEMP "gh.zip"
-    try { Invoke-WebRequest "https://github.com/cli/cli/releases/download/v$ver/gh_${ver}_windows_amd64.zip" -OutFile $zip -UseBasicParsing }
-    catch { Die "gh indirilemedi." }
-    if (Test-Path "$Tools\gh") { Remove-Item "$Tools\gh" -Recurse -Force }
-    Expand-Archive $zip -DestinationPath "$Tools\gh" -Force
-    $Gh = "$Tools\gh\bin\gh.exe"
-}
-Write-Host "gh: $((& $Gh --version) | Select-Object -First 1)"
-
-# --- 4. GitHub'a giriş (bir kez) ---
-& $Gh auth status *> $null
-if ($LASTEXITCODE -ne 0) {
-    Say "GitHub'a giriş"
-    Warn "Birazdan bir kod ve tarayıcı açılacak. Sorulursa 'Authenticate Git with your GitHub credentials?' -> Y."
-    Warn "Tarayıcıda GitHub hesabınızla giriş yapıp kodu girin ve 'Authorize' deyin."
-    & $Gh auth login --web --git-protocol https --hostname github.com
-    if ($LASTEXITCODE -ne 0) { Die "GitHub girişi tamamlanmadı." }
-}
-& $Gh auth setup-git *> $null   # güncelleme butonu (git pull) bu girişi kullansın
-& $Gh repo view $Repo *> $null
-if ($LASTEXITCODE -ne 0) { Die "GitHub hesabınızın '$Repo' deposuna erişimi yok. Depo sahibinin davetini e-postanızdan kabul edip tekrar deneyin." }
-
-# --- 5. Programı indir veya güncelle ---
+# --- 3. Programı indir veya güncelle (depo herkese açık; hesap/giriş gerekmez) ---
 if (Test-Path (Join-Path $Dest ".git")) {
     Say "Program zaten kurulu, güncelleniyor"
     git -C $Dest pull --ff-only
@@ -102,11 +70,11 @@ if (Test-Path (Join-Path $Dest ".git")) {
 } else {
     if (Test-Path $Dest) { Die "$Dest klasörü var ama bir kurulum değil. Adını değiştirip tekrar deneyin." }
     Say "Program indiriliyor -> $Dest"
-    & $Gh repo clone $Repo $Dest -- --quiet
-    if ($LASTEXITCODE -ne 0) { Die "Program indirilemedi." }
+    git clone --quiet "https://github.com/$Repo.git" $Dest
+    if ($LASTEXITCODE -ne 0) { Die "Program indirilemedi. İnternet bağlantınızı kontrol edin." }
 }
 
-# --- 6. Paketler ---
+# --- 4. Paketler ---
 Say "Paketler kuruluyor (ilk seferde birkaç dakika sürebilir)"
 Set-Location $Dest
 $VenvPy = Join-Path $Dest ".venv\Scripts\python.exe"
@@ -118,13 +86,13 @@ if (-not (Test-Path $VenvPy)) {
 & $VenvPy -m pip install -q -r requirements.txt
 if ($LASTEXITCODE -ne 0) { Die "Paketler kurulamadı." }
 
-# --- 7. Masaüstü kısayolu ---
+# --- 5. Masaüstü kısayolu ---
 if (-not $env:MR_NO_SHORTCUT) {
     $desktop = [Environment]::GetFolderPath("Desktop")
     Set-Content -Path (Join-Path $desktop "Memecoin Radar.bat") -Encoding ASCII -Value "@call `"$Dest\start.bat`""
 }
 
-# --- 8. Başlat ---
+# --- 6. Başlat ---
 $v = & $VenvPy -c "from radar import VERSION; print('v' + VERSION)"
 Say "Kurulum tamam: $v"
 Write-Host "Masaüstündeki 'Memecoin Radar' kısayoluyla açabilirsiniz."

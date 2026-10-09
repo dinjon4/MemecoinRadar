@@ -38,7 +38,7 @@ Yeni bir bilgisayarda panelden bir kez daha girilir.
 **Ayarlar → Telegram testi → Test mesajı gönder.** Telegram'a "Merhaba!" mesajı gelmeli.
 
 ## Tek adımda kurulum (önerilen)
-Önce GitHub hesabınızla depo davetini kabul edin (depo sahibi davet eder, e-postanıza gelir). Sonra:
+Hesap veya giriş gerekmez.
 
 **En kolayı — tek satır komut:**
 - **Mac:** Terminal'i açıp yapıştırın:
@@ -56,28 +56,22 @@ Yeni bir bilgisayarda panelden bir kez daha girilir.
 - **Windows:** `kurulum/kurulum.bat` ve `kurulum/kurulum.ps1` dosyalarını aynı klasöre koyup `kurulum.bat`'a çift tıklayın.
   *(Windows kurulumu henüz denenmedi; sorun olursa aşağıdaki elle kurulumu kullanın.)*
 
-Kurulum dosyası eksikse Python, git ve GitHub aracını kurar, tarayıcıda GitHub girişini ister (bir kez),
+Kurulum dosyası eksikse Python ve git'i kurar,
 programı `MemecoinRadar` klasörüne (ev klasörünüzde) indirir, paketleri kurar, masaüstüne **Memecoin Radar**
 kısayolunu koyar ve programı açar. Tekrar çalıştırılırsa sadece günceller.
 
-## Arkadaşlar için kurulum (GitHub'dan, elle)
-Program gizli bir GitHub deposunda durur. Bir kez kurulur; sonrası panelden **Güncelle** butonuyla.
+## Elle kurulum (GitHub'dan)
+Program herkese açık bir GitHub deposunda durur; hesap veya giriş gerekmez. Bir kez kurulur; sonrası panelden **Güncelle** ile.
 
-1. **GitHub hesabı:** Hesabınız yoksa [github.com](https://github.com)'dan ücretsiz açın. Depo sahibi sizi davet eder; e-postanızdaki daveti kabul edin.
-2. **Python:** Yukarıdaki "1. Python" adımı.
-3. **GitHub aracı (gh):** [cli.github.com](https://cli.github.com)'dan Mac için `.pkg`, Windows için `.msi` kurulum dosyasını indirip kurun.
-   **Windows'ta ayrıca** [git-scm.com](https://git-scm.com/download/win)'dan "Git for Windows"u kurun (Mac'te git zaten var).
-4. **GitHub'a giriş (bir kez):** Terminal (Windows: Komut İstemi) açıp yazın:
+1. **Python:** Yukarıdaki "1. Python" adımı.
+2. **git:** Mac'te Terminal'e `git --version` yazın; kurulu değilse Mac kurmayı önerir ("Yükle").
+   Windows'ta [git-scm.com](https://git-scm.com/download/win)'dan "Git for Windows"u kurun.
+3. **Programı indirme:** Programın duracağı klasöre geçip (ör. `cd Desktop`) yazın:
    ```
-   gh auth login
+   git clone https://github.com/dinjon4/MemecoinRadar.git
    ```
-   Sorulara: `GitHub.com` → `HTTPS` → "Authenticate Git with your GitHub credentials?" **Yes** → `Login with a web browser`. Tarayıcıda onaylayın.
-5. **Programı indirme:** Programın duracağı klasöre geçip (ör. `cd Desktop`) yazın:
-   ```
-   gh repo clone dinjon4/MemecoinRadar
-   ```
-6. **Başlatma:** `MemecoinRadar` klasöründeki `start.command` (Mac) veya `start.bat` (Windows) dosyasına çift tıklayın.
-7. **Kendi anahtarlarınız:** Panel → Ayarlar → Bağlantı anahtarları. Herkes **kendi** Telegram bot'unu ve **kendi** ücretsiz Helius anahtarını kullanmalı (aynı Helius anahtarı paylaşılırsa aylık kota birkaç kat hızlı biter).
+4. **Başlatma:** `MemecoinRadar` klasöründeki `start.command` (Mac) veya `start.bat` (Windows) dosyasına çift tıklayın.
+5. **Kendi anahtarlarınız:** Panel → Ayarlar → Bağlantı anahtarları. Herkes **kendi** Telegram bot'unu ve **kendi** ücretsiz Helius anahtarını kullanmalı (aynı Helius anahtarı paylaşılırsa aylık kota birkaç kat hızlı biter).
 
 ### Güncelleme
 Yeni sürüm çıkınca panelin sol menüsünde **🔔 Yeni sürüm var** yazar. **Sistem → Güncelle**'ye basın:
