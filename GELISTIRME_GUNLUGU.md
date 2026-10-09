@@ -8,6 +8,15 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-09 — İlk açılışta Streamlit e-posta sorusu (v2.0.1)
+
+- Arkadaşın Mac'inde (ilk gerçek dış kurulum) tek satır komut çalıştı, program v2.0.0 kuruldu ve tarama başladı. Ama panel açılmadı: Streamlit bir bilgisayarda ilk kez çalışınca Terminal'de bülten e-postası soruyor ve cevap bekliyor. Bu Mac'te çıkmamıştı (Streamlit daha önce kullanılmıştı).
+- Düzeltme: `start.command`/`start.bat` paneli her zaman `--server.headless true` ile açıyor (soru çıkmaz), tarayıcıyı 4 sn sonra kendisi açıyor. Servis kurulumu zaten headless'tı.
+- Test: ayrı ev klasörü (Streamlit hiç çalışmamış gibi), ayrı port; panel cevap beklemeden açıldı, e-posta sorusu çıkmadı.
+- Not: Arkadaşın Mac'inde conda `(base)` ortamı açık; program kendi `.venv`'ini kullandığı için etkilenmiyor.
+
+---
+
 ## 2026-10-09 — Depo herkese açık (v2.0.0)
 
 - Sorun: arkadaşın Mac'inde kurulum GitHub girişi istedi; arkadaşın kullanıcının GitHub/Google hesabına erişimi yok (ve kendi GitHub hesabı yok). Gizli depo için her arkadaşın kendi GitHub hesabı + davet gerekiyordu.

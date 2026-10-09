@@ -8,6 +8,10 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v2.0.1 — 2026-10-09
+- Düzeltme: Yeni kurulan bir Mac'te panel açılmıyordu; Streamlit ilk açılışta Terminal'de e-posta soruyor ve cevap bekliyordu.
+  Panel artık bu soruyu sormadan açılıyor, tarayıcıyı program kendisi açıyor.
+
 ## v2.0.0 — 2026-10-09
 - Program artık **herkese açık** GitHub deposunda: kurulum için GitHub hesabı, davet veya giriş **gerekmez**.
 - Kurulum sadeleşti: tek satır komut veya `kurulum.command` sadece Python ve git'i (gerekirse) kurar, programı indirir.

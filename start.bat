@@ -13,13 +13,13 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 start "Memecoin Radar - Tarama" ".venv\Scripts\python.exe" main.py
+REM Panel "headless" calisir: Streamlit'in ilk acilista sordugu e-posta sorusu cikmaz. Tarayiciyi biz acariz.
+start "" /b cmd /c "timeout /t 4 /nobreak >nul & start http://127.0.0.1:8501"
 REM Panel guncelleme yaptiktan sonra 75 koduyla kapanir; o zaman yeniden acilir.
-set HEADLESS=false
 :panel
-".venv\Scripts\python.exe" -m streamlit run panel.py --server.headless %HEADLESS%
+".venv\Scripts\python.exe" -m streamlit run panel.py --server.headless true
 if %ERRORLEVEL%==75 (
     echo Guncelleme yapildi, panel yeniden baslatiliyor...
-    set HEADLESS=true
     goto panel
 )
 pause

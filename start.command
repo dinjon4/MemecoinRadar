@@ -38,12 +38,13 @@ trap cleanup EXIT
 trap 'exit 0' INT HUP TERM
 
 echo "Çalışıyor. Mac bu pencere açıkken uykuya geçmeyecek. Durdurmak için Ctrl+C."
+# Panel "headless" çalışır: Streamlit'in ilk açılışta sorduğu e-posta sorusu çıkmaz (yoksa pencere cevap bekler).
+# Tarayıcıyı biz açarız, sadece ilk açılışta.
+(sleep 4; open "http://127.0.0.1:8501") &
 # Panel güncelleme yaptıktan sonra 75 koduyla kapanır; o zaman yeniden açılır
 # (tarayıcıda yeni sekme açmadan; açık sayfa kendiliğinden yeniden bağlanır).
-HEADLESS=false
 while true; do
-    .venv/bin/python -m streamlit run panel.py --server.headless $HEADLESS
+    .venv/bin/python -m streamlit run panel.py --server.headless true
     [ $? -eq 75 ] || break
     echo "Güncelleme yapıldı, panel yeniden başlatılıyor..."
-    HEADLESS=true
 done
