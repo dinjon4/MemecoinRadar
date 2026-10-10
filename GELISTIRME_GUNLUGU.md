@@ -8,6 +8,18 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-10 — Erken tespit analizi (kod değişikliği yok)
+
+- Kullanıcıyı (arkadaş) hedef: hikâyesi yeni ilgi görmeye başlayan tokenı ve ilk gerçek para akışını, token yükselmeden önce yakalamak. Önce analiz ve öneri istendi; onaysız ücretli servis veya çalışma şekli değişikliği yok.
+- Veritabanından ölçüm: 1.032 token görüldü, 836'sı bonding curve diye elendi (653'ü Pump.fun); filtreyi geçen 41 tokenın ilk görüldüğündeki ortanca yaşı 7,6 saat; 33/41 trend/işlem sayısı listelerinden; 6 uyarının tokenları 4–25 saatlik.
+- Teşhis (önem sırası): keşif kaynağı (zaten hareketli listeler) ve bonding curve + $10K likidite filtresi > 24 saatlik toplam veri (ivme yok; whale eşiği altı alımlar sayılmıyor) > güncelleme sıklığı. Hikâye katmanı ters yönde (önce token, sonra haber), anlatı ivmesi yok, token açıklaması/sosyal linkleri kullanılmıyor.
+- Bulgu: DexScreener (m5/h1/h6 işlem, hacim, fiyat; site/sosyal linkler) ve GeckoTerminal (m5–h1 benzersiz alıcı/satıcı) ivme verisini zaten veriyor; program sadece h24 saklıyor.
+- Erişim denemeleri: Wikipedia sayfa görüntülenme API'si ve Reddit rising RSS çalışıyor; PumpPortal alan adı bu ağdan çözülmüyor (engel/kapanma belirsiz) → yedek: Helius websocket (kota doğrulanmalı).
+- Öneri: üç bağımsız hat (anlatı radarı, token radarı bonding curve dahil izleme listesi, para akışı ivmesi) + birleştirme; aşamalı uyarılar (anlatı yükseliyor / anlatı tokenı çıktı / ilk para girişi) ve "neden şimdi" zaman çizelgesi. Kaynaklar ücretsiz; isteğe bağlı Claude Haiku 5.5 doğrulaması ≈ $1,5/ay (günde 500 kontrol).
+- Uygulama planı 6 adım, her adım onaya bağlı. Rapor (özel artifact) kullanıcıya verildi; arkadaşın görmesi için paylaşılması gerekiyor.
+
+---
+
 ## 2026-10-09 — İlk açılışta Streamlit e-posta sorusu (v2.0.1)
 
 - Arkadaşın Mac'inde (ilk gerçek dış kurulum) tek satır komut çalıştı, program v2.0.0 kuruldu ve tarama başladı. Ama panel açılmadı: Streamlit bir bilgisayarda ilk kez çalışınca Terminal'de bülten e-postası soruyor ve cevap bekliyor. Bu Mac'te çıkmamıştı (Streamlit daha önce kullanılmıştı).
