@@ -21,6 +21,9 @@ fi
 
 .venv/bin/python main.py &
 SCANNER_PID=$!
+# Erken hacim servisi (ayrı süreç). Ayarlarda kapalıyken hiçbir şey yapmaz, sadece bekler.
+.venv/bin/python early.py >/dev/null 2>&1 &
+EARLY_PID=$!
 
 # Uyku engeli: -i = boşta kalınca uyuma (ekran yine kararabilir).
 # -w: bu betik herhangi bir şekilde biterse caffeinate de kendiliğinden biter.
@@ -30,8 +33,8 @@ CAFFEINATE_PID=$!
 cleanup() {
     trap - EXIT
     echo "Kapatılıyor..."
-    kill $SCANNER_PID $CAFFEINATE_PID 2>/dev/null
-    wait $SCANNER_PID 2>/dev/null
+    kill $SCANNER_PID $EARLY_PID $CAFFEINATE_PID 2>/dev/null
+    wait $SCANNER_PID $EARLY_PID 2>/dev/null
 }
 trap cleanup EXIT
 # Ctrl+C (INT), pencere kapatma (HUP) ve sonlandırma (TERM) hepsi temiz kapanışa gider.

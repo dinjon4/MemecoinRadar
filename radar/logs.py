@@ -1,4 +1,4 @@
-"""Loglama: terminale ve logs/radar.log dosyasına yazar."""
+"""Loglama: terminale ve logs/radar.log (erken hacim servisi: logs/early.log) dosyasına yazar."""
 
 import logging
 import sys
@@ -9,11 +9,12 @@ from radar import LOG_DIR, LOG_PATH
 FORMAT = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
 
 
-def setup(to_file: bool = True, level: int = logging.INFO) -> None:
+def setup(to_file: bool = True, level: int = logging.INFO, path=LOG_PATH) -> None:
     """Loglamayı kurar.
 
     Log dosyasına sadece tarama servisi yazar (to_file=True). Panel de yazarsa
     Windows'ta dosya döndürme (rotation) sırasında dosya kilitlenme sorunu çıkar.
+    Aynı sebeple her servis kendi dosyasına yazar (path).
     """
     root = logging.getLogger()
     root.setLevel(level)
@@ -26,7 +27,7 @@ def setup(to_file: bool = True, level: int = logging.INFO) -> None:
     if to_file:
         LOG_DIR.mkdir(exist_ok=True)
         # 1 MB dolunca yeni dosyaya geçer, en fazla 5 eski dosya tutar.
-        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=5, encoding="utf-8")
+        file_handler = RotatingFileHandler(path, maxBytes=1_000_000, backupCount=5, encoding="utf-8")
         file_handler.setFormatter(logging.Formatter(FORMAT))
         root.addHandler(file_handler)
 
@@ -35,9 +36,9 @@ def setup(to_file: bool = True, level: int = logging.INFO) -> None:
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
-def tail(lines: int = 50) -> list[str]:
+def tail(lines: int = 50, path=LOG_PATH) -> list[str]:
     """Log dosyasının son satırlarını döner (panel için)."""
-    if not LOG_PATH.exists():
+    if not path.exists():
         return []
-    with open(LOG_PATH, encoding="utf-8", errors="replace") as f:
+    with open(path, encoding="utf-8", errors="replace") as f:
         return f.read().splitlines()[-lines:]

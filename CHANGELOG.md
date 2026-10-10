@@ -8,6 +8,16 @@ Sürüm numarası kuralı:
 - **Ortadaki rakam** (v1.1.0): yeni özellik, yeni aşama
 - **İlk rakam** (v2.0.0): kurulumu etkileyen büyük değişiklik (ör. veriler sıfırlanır, yeniden kurulum gerekir)
 
+## v2.1.0 — 2026-10-10
+- Yeni: **Erken Hacim** (Aşama 8, 1. adım). Ayrı bir servis yeni açılan havuzların (pump.fun bonding curve dahil)
+  hacim, alım/satım ve farklı alıcı sayısını dakika dakika kaydeder. Şimdilik **sadece veri toplar, uyarı göndermez**.
+- Panelde yeni **Erken Hacim** sayfası: izlenen havuzlar, son 5 dk hacim, ivme, alıcı sayısı. "Veri toplamayı aç" düğmesi.
+- Ayarlar → Erken Hacim: açma/kapama, ölçüm sıklığı, havuz yaşı, en fazla havuz, saklama süresi. Varsayılan kapalı.
+- Mevcut tarama, skor ve uyarılar değişmedi. Tek fark: GeckoTerminal ve DexScreener istek hakkı iki servis arasında
+  paylaşılıyor; tarama birkaç saniye yavaşlayabilir.
+- 7/24 servis kuruluysa: yeni servisin de kurulması için `servis_kur.command`'ı bir kez daha çalıştırın.
+- Yeni ayarlar `config.yaml`'a kendiliğinden eklenir.
+
 ## v2.0.1 — 2026-10-09
 - Düzeltme: Yeni kurulan bir Mac'te panel açılmıyordu; Streamlit ilk açılışta Terminal'de e-posta soruyor ve cevap bekliyordu.
   Panel artık bu soruyu sormadan açılıyor, tarayıcıyı program kendisi açıyor.

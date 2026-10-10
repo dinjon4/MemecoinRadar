@@ -1,8 +1,9 @@
 #!/bin/bash
 # Memecoin Radar — 7/24 çalışma için Mac servis kurulumu. Finder'da çift tıklayın.
 #
-# Üç arka plan servisi (launchd "LaunchAgent") kurar:
+# Dört arka plan servisi (launchd "LaunchAgent") kurar:
 #   com.memecoinradar.scanner  tarama servisi (main.py)
+#   com.memecoinradar.early    erken hacim servisi (early.py; ayarlarda kapalıyken sadece bekler)
 #   com.memecoinradar.panel    panel (http://127.0.0.1:8501)
 #   com.memecoinradar.awake    Mac'in boşta uykuya geçmesini engeller
 # Servisler kullanıcı oturumu açılınca kendiliğinden başlar; çökerse macOS yeniden başlatır.
@@ -55,13 +56,15 @@ PLIST
 
 write_agent com.memecoinradar.scanner \
     "<string>$DIR/.venv/bin/python</string><string>$DIR/main.py</string>" service-scanner.log
+write_agent com.memecoinradar.early \
+    "<string>$DIR/.venv/bin/python</string><string>$DIR/early.py</string>" service-early.log
 write_agent com.memecoinradar.panel \
     "<string>$DIR/.venv/bin/python</string><string>-m</string><string>streamlit</string><string>run</string><string>$DIR/panel.py</string><string>--server.headless</string><string>true</string>" \
     service-panel.log
 write_agent com.memecoinradar.awake \
     "<string>/usr/bin/caffeinate</string><string>-i</string><string>-s</string>" service-awake.log
 
-for label in com.memecoinradar.awake com.memecoinradar.scanner com.memecoinradar.panel; do
+for label in com.memecoinradar.awake com.memecoinradar.scanner com.memecoinradar.early com.memecoinradar.panel; do
     launchctl bootout "gui/$UID_NUM/$label" 2>/dev/null
     launchctl bootstrap "gui/$UID_NUM" "$AGENTS/$label.plist" || { echo "Servis başlatılamadı: $label"; read -r; exit 1; }
 done

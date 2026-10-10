@@ -130,6 +130,39 @@ CREATE TABLE IF NOT EXISTS news (
 );
 CREATE INDEX IF NOT EXISTS idx_news_published ON news(published_at);
 
+-- Aşama 8 (Erken Hacim, ayrı süreç: early.py): izlenen yeni havuzlar
+CREATE TABLE IF NOT EXISTS ev_pools (
+    pool           TEXT PRIMARY KEY,    -- havuz (pair) adresi
+    chain          TEXT NOT NULL,       -- 'solana' (BNB Chain sonra)
+    token          TEXT NOT NULL,       -- memecoin adresi
+    name           TEXT,
+    symbol         TEXT,
+    dex            TEXT,
+    created_at     TEXT NOT NULL,       -- havuzun açılışı (UTC)
+    first_seen_at  TEXT NOT NULL,
+    last_listed_at TEXT NOT NULL,       -- GeckoTerminal listelerinde en son görüldüğü an
+    last_active_at TEXT,                -- son 5 dk'da işlem görüldüğü en son ölçüm
+    source         TEXT,                -- ilk görüldüğü liste
+    url            TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ev_pools_created ON ev_pools(created_at);
+
+-- Havuzların dakikalık anlık görüntüleri. source: 'gt' (GeckoTerminal; benzersiz alıcı ve 15 dk dahil)
+-- veya 'ds' (DexScreener; benzersiz alıcı ve 15 dk yok). Hacimler $; mX/hX = son 5 dk, 15 dk, 1 saat.
+CREATE TABLE IF NOT EXISTS ev_snapshots (
+    pool            TEXT NOT NULL,
+    taken_at        TEXT NOT NULL,
+    source          TEXT NOT NULL,
+    price_usd       REAL,
+    market_cap_usd  REAL,
+    liquidity_usd   REAL,
+    m5_volume REAL,  m5_buys INTEGER,  m5_sells INTEGER,  m5_buyers INTEGER,  m5_sellers INTEGER,
+    m15_volume REAL, m15_buys INTEGER, m15_sells INTEGER, m15_buyers INTEGER, m15_sellers INTEGER,
+    h1_volume REAL,  h1_buys INTEGER,  h1_sells INTEGER,  h1_buyers INTEGER,  h1_sellers INTEGER,
+    PRIMARY KEY (pool, taken_at, source)
+);
+CREATE INDEX IF NOT EXISTS idx_ev_snapshots_taken ON ev_snapshots(taken_at);
+
 -- Ücretli/limitli API'lerin tahmini kredi kullanımı (gün başına)
 CREATE TABLE IF NOT EXISTS api_usage (
     day      TEXT NOT NULL,           -- YYYY-MM-DD (UTC)

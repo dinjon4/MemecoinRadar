@@ -124,7 +124,13 @@ Ekran yine kararabilir. Kapağı kapatırsanız Mac yine uyur ve tarama durur.
 
 **Durdurmak için:** Terminal penceresinde **Ctrl+C** basın veya pencereyi kapatın (Mac "çalışan işlem sonlandırılsın mı?" diye sorarsa *Sonlandır*).
 Tarama, panel ve uyku engeli birlikte kapanır; Mac normal uyku ayarına döner.
-Windows'ta iki pencereyi de kapatın.
+Windows'ta açılan pencerelerin hepsini kapatın.
+
+## Erken Hacim (deneme aşamasında)
+Ayrı bir servis (`early.py`) yeni açılan havuzların hacim ve alıcı sayısını dakika dakika kaydeder. Şimdilik **sadece veri toplar,
+uyarı göndermez**. Panelde **Erken Hacim** sayfasından veya **Ayarlar → Erken Hacim**'den açılır (varsayılan kapalı).
+`start.command` / `start.bat` bu servisi kendiliğinden başlatır. 7/24 servis kuruluysa yeni servisin de kurulması için
+`servis_kur.command`'ı bir kez daha çalıştırın.
 
 ## Sorun giderme
 - Panelin **Sistem** sayfasında son log kayıtları ve API kullanımı görünür; **Genel Bakış** sayfası özet verir. Ayrıntılı kayıtlar `logs/radar.log` dosyasındadır.

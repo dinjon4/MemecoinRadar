@@ -101,6 +101,17 @@ SETTINGS: list[Setting] = [
             "Haber kaynakları kaç dakikada bir okunur.", "Haber", 6, 10, 1440),
     Setting("news_lookback_hours", int, 48, "Hikâye zaman aralığı (saat)",
             "Tokenın çıkışından en fazla bu kadar önceki haberlere bakılır.", "Haber", 6, 1, 96),
+    # Erken Hacim (ayrı süreç: early.py). Şimdilik sadece veri toplar, uyarı göndermez.
+    Setting("early_enabled", bool, False, "Erken hacim veri toplama",
+            "Açıkken yeni havuzların dakikalık hacim/alıcı verisi kaydedilir. Uyarı gönderilmez.", "Erken Hacim", 8),
+    Setting("early_interval_seconds", int, 60, "Ölçüm sıklığı (saniye)",
+            "Kaç saniyede bir yeni havuzlar ve anlık görüntüler alınır.", "Erken Hacim", 8, 30, 600),
+    Setting("early_max_age_hours", int, 6, "En fazla havuz yaşı (saat)",
+            "Bundan eski havuzların ölçümü durur.", "Erken Hacim", 8, 1, 48),
+    Setting("early_max_pools", int, 300, "Her turda ölçülecek en fazla havuz",
+            "En son hareket gören havuzlar önce ölçülür.", "Erken Hacim", 8, 10, 1500),
+    Setting("early_keep_days", int, 3, "Veri saklama süresi (gün)",
+            "Bundan eski ölçümler silinir (veritabanı büyümesin).", "Erken Hacim", 8, 1, 30),
     # Çalışma
     Setting("dry_run", bool, False, "Deneme modu (dry run)",
             "Açıksa Telegram'a mesaj gönderilmez, sadece terminale ve loga yazılır.", "Çalışma", 0),
@@ -202,6 +213,10 @@ def load(path=CONFIG_PATH) -> dict:
     clean, errors = validate(flat)
     if errors:
         raise ConfigError("config.yaml hatalı:\n- " + "\n- ".join(errors))
+    if SETTINGS_BY_KEY.keys() - flat.keys():
+        # Yeni sürümle gelen ayarlar dosyaya eklensin (uyarı her okumada tekrarlanmasın).
+        save(clean, path)
+        log.info("config.yaml yeni ayarlarla güncellendi.")
     return clean
 
 

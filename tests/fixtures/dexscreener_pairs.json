@@ -1,0 +1,185 @@
+{
+ "schemaVersion": "1.0.0",
+ "pairs": [
+  {
+   "chainId": "solana",
+   "dexId": "pumpswap",
+   "url": "https://dexscreener.com/solana/fvzqeg9dykqrxumswwtbrpsaneov6guujtcvlrdyt6qi",
+   "pairAddress": "FVZqEg9dYKqRXUmswwtBRPSaneoV6guujtCvLrDyt6qi",
+   "baseToken": {
+    "address": "3Y1SCEJABneLzJ1KL7f6jp5NyP7wxjtqmAy5qKAVpump",
+    "name": "STONK",
+    "symbol": "STONK"
+   },
+   "quoteToken": {
+    "address": "So11111111111111111111111111111111111111112",
+    "name": "Wrapped SOL",
+    "symbol": "SOL"
+   },
+   "priceNative": "0.000003465",
+   "priceUsd": "0.0003798",
+   "txns": {
+    "m5": {
+     "buys": 2236,
+     "sells": 1842
+    },
+    "h1": {
+     "buys": 3578,
+     "sells": 2657
+    },
+    "h6": {
+     "buys": 3578,
+     "sells": 2657
+    },
+    "h24": {
+     "buys": 3578,
+     "sells": 2657
+    }
+   },
+   "volume": {
+    "h24": 24660.15,
+    "h6": 24660.15,
+    "h1": 24660.15,
+    "m5": 4745.96
+   },
+   "priceChange": {
+    "m5": 11.8,
+    "h1": 735,
+    "h6": 735,
+    "h24": 735
+   },
+   "liquidity": {
+    "usd": 52239.46,
+    "base": 71377991,
+    "quote": 229.2601
+   },
+   "fdv": 379813,
+   "marketCap": 379813,
+   "pairCreatedAt": 1791632043000
+  },
+  {
+   "chainId": "solana",
+   "dexId": "pumpswap",
+   "url": "https://dexscreener.com/solana/euqbfgcrxxtoxqmgptmkpobpgtuxyfph7fk23pafmzfm",
+   "pairAddress": "EUQBfGcRxXtoXqmGPTmKPoBpGTUXyFph7fK23PafMzfm",
+   "baseToken": {
+    "address": "3SwWxAKdbeYH2H8ENPhFAXbQ9zCCjaMyc2MnFkaXpump",
+    "name": "Google Gemini",
+    "symbol": "Gemini"
+   },
+   "quoteToken": {
+    "address": "So11111111111111111111111111111111111111112",
+    "name": "Wrapped SOL",
+    "symbol": "SOL"
+   },
+   "priceNative": "0.000009278",
+   "priceUsd": "0.001017",
+   "txns": {
+    "m5": {
+     "buys": 2111,
+     "sells": 1535
+    },
+    "h1": {
+     "buys": 8691,
+     "sells": 6587
+    },
+    "h6": {
+     "buys": 8691,
+     "sells": 6587
+    },
+    "h24": {
+     "buys": 8691,
+     "sells": 6587
+    }
+   },
+   "volume": {
+    "h24": 56085.66,
+    "h6": 56085.66,
+    "h1": 56085.66,
+    "m5": 7281.14
+   },
+   "priceChange": {
+    "m5": 13.64,
+    "h1": 2137,
+    "h6": 2137,
+    "h24": 2137
+   },
+   "liquidity": {
+    "usd": 86766.09,
+    "base": 43646321,
+    "quote": 386.6054
+   },
+   "fdv": 1017045,
+   "marketCap": 1017045,
+   "pairCreatedAt": 1791631150000
+  },
+  {
+   "chainId": "solana",
+   "dexId": "pumpfun",
+   "url": "https://dexscreener.com/solana/6swwcqbi2sf9xknpqw83u5ryvk4hcmmhf2re7vlm9kix",
+   "pairAddress": "6SwWCQbi2sF9xKnPqW83u5rYvk4hcMMhF2RE7vLm9Kix",
+   "baseToken": {
+    "address": "DppWLLeBgn49Poy15Jqq8vewEEtSrMBQNzKKzYgZpump",
+    "name": "Keep Yourself Safe",
+    "symbol": "KYS"
+   },
+   "quoteToken": {
+    "address": "So11111111111111111111111111111111111111112",
+    "name": "Wrapped SOL",
+    "symbol": "SOL"
+   },
+   "priceNative": "0.00000007016",
+   "priceUsd": "0.000007690",
+   "txns": {
+    "m5": {
+     "buys": 132,
+     "sells": 134
+    },
+    "h1": {
+     "buys": 669,
+     "sells": 479
+    },
+    "h6": {
+     "buys": 669,
+     "sells": 479
+    },
+    "h24": {
+     "buys": 669,
+     "sells": 479
+    }
+   },
+   "volume": {
+    "h24": 47830.07,
+    "h6": 47830.07,
+    "h1": 47830.07,
+    "m5": 11478.16
+   },
+   "priceChange": {
+    "m5": -63.35,
+    "h1": 69.26,
+    "h6": 69.26,
+    "h24": 69.26
+   },
+   "fdv": 7690.73,
+   "marketCap": 7690.73,
+   "pairCreatedAt": 1791631554000,
+   "info": {
+    "imageUrl": "https://cdn.dexscreener.com/cms/images/0DIyMd5FLVzh97gg?width=800&height=800&quality=95&format=auto",
+    "header": "https://cdn.dexscreener.com/cms/images/RH-vhyzyIW7Y2D64?width=1500&height=500&quality=95&format=auto",
+    "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/DppWLLeBgn49Poy15Jqq8vewEEtSrMBQNzKKzYgZpump?timestamp=1791632400000",
+    "websites": [],
+    "socials": [
+     {
+      "url": "https://x.com/thealexmorgan15/status/2108881704198849011",
+      "type": "twitter"
+     },
+     {
+      "url": "https://www.instagram.com/p/DeT-GDuH1Yc/",
+      "type": "instagram"
+     }
+    ]
+   }
+  }
+ ],
+ "pair": null
+}

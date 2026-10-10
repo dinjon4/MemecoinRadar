@@ -1,11 +1,13 @@
 """Ortak HTTP istemcisi: User-Agent başlığı, zaman aşımı ve otomatik tekrar deneme."""
 
 import logging
+import sqlite3
 import time
+from contextlib import closing
 
 import requests
 
-from radar import USER_AGENT
+from radar import DATA_DIR, USER_AGENT
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +24,11 @@ MIN_INTERVAL_SECONDS = {
     "www.reddit.com": 10.0,   # RSS limiti sıkı (art arda isteklerde 429)
 }
 
+# Bu adreslerin sırası tarama servisi ile erken hacim servisi (iki ayrı süreç) arasında ortak tutulur;
+# yoksa iki süreç birlikte ücretsiz limiti aşar. Sıra küçük bir SQLite dosyasında saklanır.
+SHARED_HOSTS = {"api.geckoterminal.com", "api.dexscreener.com"}
+SHARED_THROTTLE_PATH = DATA_DIR / "throttle.db"
+
 _session = requests.Session()
 # Bazı API'ler (ör. DexScreener) User-Agent olmayan isteklere 403 veriyor.
 _session.headers["User-Agent"] = USER_AGENT
@@ -30,10 +37,46 @@ _last_request_at: dict[str, float] = {}
 
 def _throttle(host: str) -> None:
     interval = MIN_INTERVAL_SECONDS.get(host, 0)
+    if host in SHARED_HOSTS and interval:
+        wait = reserve_shared_slot(host, interval)
+        if wait is not None:
+            if wait > 0:
+                time.sleep(wait)
+            return
     elapsed = time.monotonic() - _last_request_at.get(host, float("-inf"))
     if elapsed < interval:
         time.sleep(interval - elapsed)
     _last_request_at[host] = time.monotonic()
+
+
+def reserve_shared_slot(host: str, interval: float, path=None) -> float | None:
+    """Süreçler arası ortak sıradan bir istek hakkı ayırır; isteğe kadar beklenecek saniyeyi döner.
+
+    Dosya kullanılamazsa None döner (o zaman süreç kendi içindeki bekleme ile devam eder).
+    """
+    path = path or SHARED_THROTTLE_PATH
+    try:
+        path.parent.mkdir(exist_ok=True)
+        with closing(sqlite3.connect(path, timeout=30, isolation_level=None)) as conn:
+            conn.execute("CREATE TABLE IF NOT EXISTS slots (host TEXT PRIMARY KEY, next_at REAL NOT NULL)")
+            conn.execute("BEGIN IMMEDIATE")  # aynı anda tek süreç okuyup yazsın
+            row = conn.execute("SELECT next_at FROM slots WHERE host = ?", (host,)).fetchone()
+            now = time.time()
+            next_at = row[0] if row else now
+            # Saat geri alındıysa veya kayıt bozuksa sonsuza kadar beklenmesin.
+            if next_at > now + 10 * interval:
+                next_at = now
+            slot = max(now, next_at)
+            conn.execute(
+                "INSERT INTO slots (host, next_at) VALUES (?, ?) "
+                "ON CONFLICT(host) DO UPDATE SET next_at = excluded.next_at",
+                (host, slot + interval),
+            )
+            conn.execute("COMMIT")
+        return slot - now
+    except (sqlite3.Error, OSError) as e:
+        log.debug("Ortak istek sırası kullanılamadı (%s), süreç içi bekleme kullanılıyor.", type(e).__name__)
+        return None
 
 
 def request(method: str, url: str, **kwargs) -> requests.Response:

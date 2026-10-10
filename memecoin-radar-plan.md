@@ -85,6 +85,7 @@ Solana'da yeni çıkan memecoinleri izleyen, büyük cüzdanların para akışı
 ```
 MemecoinRadar/
   main.py              # tarama servisi (döngü)
+  early.py             # erken hacim servisi (Aşama 8, ayrı süreç)
   panel.py             # yerel Streamlit paneli
   start.command        # Mac: tek tıkla başlat
   start.bat            # Windows: tek tıkla başlat
@@ -98,6 +99,7 @@ MemecoinRadar/
     scoring.py         # Aşama 4
     notify.py          # Telegram
     tracking.py        # Aşama 5
+    early/             # Aşama 8: collect (veri toplama), summary (panel özeti)
     db.py
   data/
     radar.db
@@ -235,6 +237,29 @@ Yatırım tavsiyesi değildir.
 - Ucuz bir bulut sunucuya taşıma adımları
 - Çökünce kendini yeniden başlatma (systemd veya benzeri)
 - Veritabanı yedeği (günlük kopya)
+
+### Aşama 8 — Erken Hacim Motoru (anlatıdan bağımsız)
+- İstek (arkadaş, 2026-10-10): yeni tokenlarda ilk gerçek hacim ve alım momentumu başladığında erken uyarı; Solana ve BNB Chain.
+- Analiz raporu "Erken Hacim Motoru" (özel artifact). Teşhis: bonding curve eleniyor, sadece 24 saatlik toplamlar tutuluyor,
+  cüzdan akışı sadece büyük işlemleri görüyor; BNB Chain desteği yok.
+- Kararlar (arkadaş onayı, 2026-10-10): **ayrı süreç** (`early.py`, mevcut taramaya dokunmaz); GeckoTerminal/DexScreener
+  istek hakkı iki süreç arasında **paylaşılır** (tarama biraz yavaşlayabilir, kabul); Telegram uyarıları **ölçüm sonuçları
+  görüldükten sonra** açılır; **BNB Chain Solana sonuçlarından sonra**.
+- Adımlar:
+  1. Solana: sadece veri toplama + panelde liste — **uygulandı (v2.1.0)**
+  2. Sinyaller ve kurallar (benzersiz alıcı artışı, hacim ivmesi, alım baskısı, süreklilik, yoğunlaşma, sahte hacim işareti),
+     iki basamak (👀 İlk hareket → 🟢 Momentum), "neden şimdi" açıklaması; sadece panel
+  3. Ölçüm: +15 dk / 1 s / 6 s fiyat, rastgele karşılaştırma grubu; eşik ayarı
+  4. Telegram uyarıları (onayla)
+  5. BNB Chain bağdaştırıcısı (GeckoTerminal `bsc` + DexScreener `bsc` + GoPlus güvenlik)
+  6. İsteğe bağlı: kısa listedeki havuzlar için zincirden doğrudan okuma (ücretli plan gerekirse ayrıca onay)
+- Uygulanan (v2.1.0): her 60 sn GeckoTerminal "5 dk trend" (2 sayfa) + "yeni havuzlar" (bonding curve dahil; bu listeler
+  5/15/60 dk hacim, alım/satım ve benzersiz alıcı içerir → `ev_snapshots` 'gt'); izlenen havuzlar (≤6 saat, son 1 saatte
+  listelenmiş veya işlem görmüş, en fazla 300) DexScreener `latest/dex/pairs` ile 30'arlı ölçülür ('ds'). 3 gün saklanır.
+  Panelde "Erken Hacim" sayfası (ivme = son 5 dk hacmi ÷ 10–40 dk önceki ortalama). Varsayılan kapalı.
+- Bulgu: GeckoTerminal "5 dk trend" listesi 0,1–2 saatlik, yüzlerce alıcılı havuzları getiriyor (yeni havuz listesi tek başına
+  saniyeler içinde akıp gidiyor). DexScreener havuz adresiyle toplu sorgu bonding curve havuzlarında da çalışıyor ama
+  onlarda likidite vermiyor (GeckoTerminal'in değeri kullanılır).
 
 ### Ek (sonra) — Telegram komutları
 - `/token ADRES` → o token için anlık analiz (Aşama 4'ten sonra eklenmesi kolay)

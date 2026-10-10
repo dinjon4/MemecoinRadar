@@ -19,7 +19,9 @@ import pandas as pd
 import streamlit as st
 
 import panel_ui as ui
-from radar import CURRENT_STAGE, config, db, flows, keys, logs, news, notify, risk, scoring, stats, tracking, updater
+from radar import (CURRENT_STAGE, EARLY_LOG_PATH, config, db, flows, keys, logs, news, notify, risk, scoring, stats,
+                   tracking, updater)
+from radar.early import summary as early_summary
 from radar.sources import helius
 
 TZ = ZoneInfo("Europe/Istanbul")
@@ -58,9 +60,10 @@ def age_hours(iso: str | None) -> float | None:
     return (datetime.now(timezone.utc) - datetime.fromisoformat(iso)).total_seconds() / 3600
 
 
-def is_alive(status: dict) -> bool:
-    hb = status.get("heartbeat_at")
-    if not hb or status.get("stopped_at"):
+def is_alive(status: dict, prefix: str = "") -> bool:
+    """prefix: "" = tarama servisi, "early_" = erken hacim servisi."""
+    hb = status.get(f"{prefix}heartbeat_at")
+    if not hb or status.get(f"{prefix}stopped_at"):
         return False
     return datetime.now(timezone.utc) - datetime.fromisoformat(hb) < timedelta(seconds=ALIVE_SECONDS)
 
@@ -635,6 +638,98 @@ def page_performance() -> None:
     conn.close()
 
 
+# --- Erken Hacim ---
+
+def page_early() -> None:
+    cfg = load_config_or_none() or config.defaults()
+    max_age = cfg["early_max_age_hours"]
+    now = datetime.now(timezone.utc)
+    conn = db.connect()
+    status = db.get_status(conn)
+    counts = early_summary.counts(conn, max_age, now)
+    pools = early_summary.pools(conn, max_age, now)
+    conn.close()
+
+    alive = is_alive(status, "early_")
+    if not alive:
+        pill = ui.status_pill(False, "Erken hacim servisi çalışmıyor")
+    elif not cfg["early_enabled"]:
+        pill = ui.status_pill(False, "Servis çalışıyor · veri toplama kapalı")
+    else:
+        pill = ui.status_pill(True, f"Veri topluyor · son tur {ago(status.get('early_last_run_at')) or '—'}")
+    ui.header("Erken Hacim", f"Son {max_age} saatte açılan havuzlar · dakikalık hacim ve alıcı ölçümü", pill)
+
+    st.info("Bu bölüm şimdilik **sadece veri topluyor**, uyarı göndermiyor. Toplanan veriyle kurallar ayarlanacak, "
+            "sonuçlar ölçüldükten sonra Telegram uyarıları açılacak.", icon=":material/science:")
+    if not alive:
+        st.warning("Erken hacim servisi (early.py) çalışmıyor. Programı start.command / start.bat ile yeniden açın; "
+                   "7/24 servis kuruluysa servis_kur.command'ı bir kez daha çalıştırın.")
+    if not cfg["early_enabled"]:
+        if st.button("Veri toplamayı aç", type="primary"):
+            config.save({**cfg, "early_enabled": True})
+            st.rerun()
+    if status.get("early_last_error"):
+        st.warning(f"Son hata: {status['early_last_error']}")
+
+    ui.kpi_grid([
+        {"label": "İzlenen havuz", "value": f"{counts['pools']}", "sub": f"Son {max_age} saatte açılmış"},
+        {"label": "Yeni havuz (1 saat)", "value": f"{counts['new_last_hour']}", "sub": "Listelerde ilk kez görülen"},
+        {"label": "Ölçüm (1 saat)", "value": f"{counts['snapshots_last_hour']:,}",
+         "sub": f"Toplam {counts['snapshots_total']:,} · {cfg['early_keep_days']} gün saklanır"},
+        {"label": "Son tur", "value": local_time(status.get("early_last_run_at"), "%H:%M:%S"),
+         "sub": f"{cfg['early_interval_seconds']} sn'de bir"},
+    ])
+
+    with st.container(key="card-early"):
+        only_active = st.toggle("Sadece son 5 dakikada işlem görenler", value=True)
+        table = [
+            {
+                "Sembol": r["symbol"],
+                "İsim": r["name"],
+                "Yaş (dk)": round(r["age_minutes"]),
+                "DEX": r["dex"],
+                "Hacim 5dk ($)": r["m5_volume"],
+                "İvme": r["acceleration"],
+                "Alıcı 5dk": r["m5_buyers"],
+                "Alıcı 15dk": r["m15_buyers"],
+                "Alım/Satım 5dk": f"{r['m5_buys'] or 0} / {r['m5_sells'] or 0}",
+                "Hacim 1s ($)": r["h1_volume"],
+                "MC ($)": r["market_cap_usd"],
+                "Likidite ($)": r["liquidity_usd"],
+                "Ölçüm": local_time(r["measured_at"], "%H:%M:%S"),
+                "Liste": r["source"],
+                "Link": r["url"],
+                "𝕏": x_search_url(r["token"]),
+                "Adres": r["token"],
+            }
+            for r in pools
+            if not only_active or (r["m5_buys"] or 0) + (r["m5_sells"] or 0) > 0
+        ]
+        if not table:
+            st.info("Henüz ölçüm yok. Veri toplama açıksa ilk sonuçlar 1–2 dakika içinde gelir.")
+        else:
+            money = st.column_config.NumberColumn(format="compact")
+            st.dataframe(
+                table, hide_index=True, width="stretch", height=min(560, 40 + 35 * len(table)),
+                column_config={
+                    "Hacim 5dk ($)": money, "Hacim 1s ($)": money, "MC ($)": money, "Likidite ($)": money,
+                    "İvme": st.column_config.NumberColumn(
+                        format="%.1fx", help="Son 5 dk hacmi, 10–40 dk önceki ölçümlerin ortalamasının kaç katı. "
+                                             "Yeterli geçmiş yoksa boş."),
+                    "Alıcı 5dk": st.column_config.NumberColumn(
+                        help="Farklı alıcı cüzdan sayısı. Sadece GeckoTerminal listelerinde görülen havuzlarda var."),
+                    "Link": st.column_config.LinkColumn(display_text="DexScreener"),
+                    "𝕏": st.column_config.LinkColumn(display_text="ara"),
+                },
+            )
+            st.caption("Hacim ve alım/satım DexScreener'dan, alıcı sayıları GeckoTerminal'den. "
+                       "Bu liste bir öneri değildir; erken tokenların çoğu kısa sürede söner.")
+
+    with st.expander("Erken hacim servisinin son kayıtları"):
+        lines = logs.tail(60, EARLY_LOG_PATH)
+        st.code("\n".join(lines) if lines else "Henüz kayıt yok.", language=None, height=300, wrap_lines=True)
+
+
 # --- Ayarlar ---
 
 def setting_input(s: config.Setting, value):
@@ -908,6 +1003,7 @@ st.logo(str(LOGO), size="large")
 nav = st.navigation([
     st.Page(page_overview, title="Genel Bakış", icon=":material/space_dashboard:", default=True),
     st.Page(page_tokens, title="Tokenlar", icon=":material/toll:", url_path="tokenlar"),
+    st.Page(page_early, title="Erken Hacim", icon=":material/speed:", url_path="erken-hacim"),
     st.Page(page_alerts, title="Uyarılar", icon=":material/notifications:", url_path="uyarilar"),
     st.Page(page_performance, title="Performans", icon=":material/insights:", url_path="performans"),
     st.Page(page_settings, title="Ayarlar", icon=":material/tune:", url_path="ayarlar"),

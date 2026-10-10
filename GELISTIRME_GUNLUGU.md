@@ -8,6 +8,39 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-10 — v2.1.0: Erken Hacim, 1. adım (Solana veri toplama)
+
+Arkadaş raporun dört sorusunu onayladı: ayrı süreç EVET, GeckoTerminal hakkının paylaşılması EVET,
+Telegram ölçümden sonra EVET, BNB Chain SONRA. Plan Aşama 8 olarak `memecoin-radar-plan.md`'ye işlendi.
+
+Yapılanlar:
+- `early.py`: ayrı servis. Ayar kapalıyken istek yapmaz, 60 sn'de bir ayara bakar. Kendi logu `logs/early.log`.
+  Güncelleme sonrası `restart_requested_at` ile kendini yeniden başlatır (main.py ile aynı yöntem). Durum anahtarları `early_*`.
+- `radar/early/collect.py`: her tur GeckoTerminal "5 dk trend" (2 sayfa) + "yeni havuzlar" → `ev_pools` ve 'gt' anlık görüntüsü
+  (5/15/60 dk hacim, alım/satım, benzersiz alıcı/satıcı); izlenen havuzlar DexScreener `latest/dex/pairs` (30'arlı) → 'ds'.
+  İzlenen havuz: ≤6 saat, ve son 15 dk'da listelenmiş ya da son 60 dk'da işlem görmüş; en fazla 300. 3 gün saklama.
+  Zincir `Chain` veri sınıfıyla soyutlandı (şimdilik sadece SOLANA).
+- `radar/early/summary.py` + panelde **Erken Hacim** sayfası (ivme = son 5 dk hacmi ÷ 10–40 dk önceki ortalama).
+- `radar/http.py`: GeckoTerminal ve DexScreener için süreçler arası ortak istek sırası (`data/throttle.db`, `BEGIN IMMEDIATE`).
+  Dosya kullanılamazsa süreç içi beklemeye düşer; saat geri alınırsa sonsuza kadar beklemez.
+- `config.load`: dosyada eksik (yeni sürümle gelen) ayar varsa dosyayı yeniden yazar; uyarılar her okumada tekrarlanmasın diye.
+- `logs.setup/tail` dosya yolu alıyor (Windows'ta iki süreç aynı log dosyasını döndüremez).
+- Başlatıcılar: `start.command`, `start.bat` (küçültülmüş pencere), `servis_kur/kaldir.command` (`com.memecoinradar.early`).
+- `CURRENT_STAGE` 8 (yeni ayarlar Aşama 8 grubunda görünsün).
+- Testler: `tests/test_early.py` (18 test; yeni fixture `dexscreener_pairs.json`). Toplam 138, hepsi geçti.
+
+Bulgular (canlı):
+- Tur ~13 sn; yalnız çalışırken her dakika ~25 yeni havuz, ~100–170 anlık görüntü.
+- Tarama ile birlikte: keşif ~45 sn (önce ~30 sn), 429 hatası yok. Erken tur o sırada ~33 sn.
+- DexScreener pump.fun bonding curve havuzlarında likidite vermiyor → panelde GeckoTerminal değeri.
+- İlk izleme kuralıyla (listede görülen 60 dk izlenir) ölçülen havuz sayısı hızla artıyordu; çoğu hiç işlem görmeyen havuzlar.
+  15 dk'ya indirildi.
+
+Bilinen eksikler / sonraki adım:
+- Veritabanı büyümesi bir gün çalıştıktan sonra ölçülmeli (tahmin: günde birkaç yüz bin satır).
+- Windows başlatıcısı denenmedi. 7/24 servisi kurulu Mac'lerde `servis_kur.command` yeniden çalıştırılmalı.
+- 2. adım (sinyaller, kurallar, açıklama) 2–3 günlük veri birikince.
+
 ## 2026-10-10 — Erken Hacim Motoru analizi (kod değişikliği yok)
 
 Arkadaşın ikinci isteği: anlatıdan bağımsız, ilk gerçek hacim/alım momentumunda erken uyarı; Solana ve BNB Chain değerlendirmesi.

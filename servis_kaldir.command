@@ -5,7 +5,7 @@
 UID_NUM="$(id -u)"
 AGENTS="$HOME/Library/LaunchAgents"
 
-for label in com.memecoinradar.panel com.memecoinradar.scanner com.memecoinradar.awake; do
+for label in com.memecoinradar.panel com.memecoinradar.scanner com.memecoinradar.early com.memecoinradar.awake; do
     launchctl bootout "gui/$UID_NUM/$label" 2>/dev/null && echo "Durduruldu: $label"
     rm -f "$AGENTS/$label.plist"
 done
