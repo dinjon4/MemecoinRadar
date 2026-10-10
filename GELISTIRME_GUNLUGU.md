@@ -8,6 +8,29 @@ En yeni kayıt en üstte. Her çalışma oturumunun sonunda yeni bir kayıt ekle
 
 ---
 
+## 2026-10-10 — Erken Hacim Motoru analizi (kod değişikliği yok)
+
+Arkadaşın ikinci isteği: anlatıdan bağımsız, ilk gerçek hacim/alım momentumunda erken uyarı; Solana ve BNB Chain değerlendirmesi.
+Sadece analiz ve plan istendi; kod yazılmadı. Rapor "Erken Hacim Motoru" adıyla özel artifact olarak yayınlandı.
+
+Bulgular:
+- Zincir desteği: sadece Solana. GeckoTerminal ve DexScreener uç noktalarında "solana" sabit; swap çözümleme ve RugCheck Solana'ya özgü.
+  BNB Chain için kodda hiçbir şey yok.
+- Cüzdan akışı sadece PumpSwap havuzlarında (filtreyi geçen 41 tokenın 7'si ölçülmüyor) ve Helius'tan sadece whale eşiğine yakın
+  işlemler çekiliyor (tutar filtresi); küçük alımlar ve gerçek benzersiz alıcı sayısı görünmüyor.
+- Hacim/alım-satım sadece 24 saatlik toplam, üzerine yazılıyor; zaman serisi yok.
+- Canlı denemeler (ücretsiz, anahtarsız): GeckoTerminal `new_pools` BNB'de four.meme/PancakeSwap/Uniswap v4 havuzlarını veriyor;
+  havuz verisinde m5/m15/m30/h1 alım, satım, benzersiz alıcı/satıcı ve hacim var (iki zincirde de);
+  `pools/{adres}/trades` bonding curve havuzlarında da çalışıyor (cüzdan, yön, $ tutar).
+  DexScreener `tokens/v1/bsc` çalışıyor. GoPlus token güvenliği (BNB) yanıt veriyor.
+  BNB herkese açık RPC: adres vermeden `eth_getLogs` reddediliyor, havuz adresiyle çalışıyor.
+  four.meme sözleşmesinden doğrudan olay okuma denendi, sonuç alınamadı (adres doğrulanmadı). PumpPortal hâlâ erişilemiyor.
+
+Öneri (onay bekliyor): ayrı süreç (`early.py`), ayrı tablolar, varsayılan kapalı; zincir bağdaştırıcısı; DexScreener ile dakikalık
+anlık görüntü + ön eleme, GeckoTerminal ile kısa listeye derin bakış; iki basamaklı sinyal (panel → onaydan sonra Telegram);
+ölçüm ve karşılaştırma grubu. Sıra: Solana veri toplama → kurallar → ölçüm → Telegram → BNB Chain → isteğe bağlı anlık veri.
+Açık konu: GeckoTerminal hız sınırının iki süreç arasında paylaşılması.
+
 ## 2026-10-10 — Erken tespit analizi (kod değişikliği yok)
 
 - Kullanıcıyı (arkadaş) hedef: hikâyesi yeni ilgi görmeye başlayan tokenı ve ilk gerçek para akışını, token yükselmeden önce yakalamak. Önce analiz ve öneri istendi; onaysız ücretli servis veya çalışma şekli değişikliği yok.
